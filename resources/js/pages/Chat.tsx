@@ -14,8 +14,12 @@ const EXAMPLE_QUESTIONS = [
 export default function Chat() {
     const { messages, isLoading, error, send, bottomRef } = useChat();
     const [input, setInput] = useState('');
+    const MAX_CHARS = 2000;
+    const charsLeft = MAX_CHARS - input.length;
+    const isOverLimit = charsLeft < 0;
 
     const handleSend = () => {
+        if (isOverLimit) return;
         send(input);
         setInput('');
     };
@@ -49,11 +53,9 @@ export default function Chat() {
                     <div className="pt-8 text-center">
                         <div className="mx-auto mb-8 max-w-xs">
                             <div
-                                className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg"
-                                style={{ backgroundColor: '#EFF6FF' }}
-                            >
-                                <span className="text-xl">🆘</span>
-                            </div>
+                                className="mx-auto mb-4 h-px w-12"
+                                style={{ backgroundColor: '#3B82F6' }}
+                            />
                             <p className="text-sm text-slate-500">
                                 Tanyakan sesuatu atau pilih contoh di bawah
                             </p>
@@ -89,18 +91,25 @@ export default function Chat() {
 
             <div className="border-t border-slate-200 bg-white px-4 py-3">
                 <div className="mx-auto flex max-w-2xl gap-2">
-                    <textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKey}
-                        placeholder="Tulis pertanyaan atau ceritakan situasimu..."
-                        rows={2}
-                        disabled={isLoading}
-                        className="flex-1 resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                    />
+                    <div className="flex-1">
+                        <textarea
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleKey}
+                            placeholder="Tulis pertanyaan atau ceritakan situasimu..."
+                            rows={2}
+                            disabled={isLoading}
+                            className={`w-full resize-none rounded-lg border px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${isOverLimit ? 'border-red-400 ring-1 ring-red-400' : 'border-slate-200'}`}
+                        />
+                        {(charsLeft <= 200 || isOverLimit) && (
+                            <p className={`mt-1 text-right text-xs ${isOverLimit ? 'text-red-500' : 'text-slate-400'}`}>
+                                {isOverLimit ? `Terlalu panjang (${Math.abs(charsLeft)} karakter lebih)` : `${charsLeft} karakter tersisa`}
+                            </p>
+                        )}
+                    </div>
                     <button
                         onClick={handleSend}
-                        disabled={isLoading || !input.trim()}
+                        disabled={isLoading || !input.trim() || isOverLimit}
                         className="self-end rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         Kirim

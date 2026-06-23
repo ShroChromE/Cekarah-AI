@@ -63,9 +63,11 @@ export default function MessageBubble(msg: ChatMessage) {
                     </div>
                 )}
 
-                {escalation_suggested && escalation_contacts && escalation_contacts.length > 0 && (
-                    <EscalationPanel contacts={escalation_contacts} />
-                )}
+                {(escalation_suggested || (typeof confidence === 'number' && confidence < 0.6)) &&
+                    escalation_contacts &&
+                    escalation_contacts.length > 0 && (
+                        <EscalationPanel contacts={escalation_contacts} />
+                    )}
             </div>
         </div>
     );
