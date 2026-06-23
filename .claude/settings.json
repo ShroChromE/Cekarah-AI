@@ -5,7 +5,9 @@
       "PowerShell(Select-String -Path \"c:\\\\laragon\\\\www\\\\cekarah-ai\\\\.env\" -Pattern \"GEMINI|AI_PROVIDER|DB_\" | Select-Object -ExpandProperty Line | Where-Object { $_ -notmatch \"^#\" })",
       "mcp__laravel-boost__get-absolute-url",
       "PowerShell(Invoke-RestMethod -Uri \"http://localhost:8000/api/test-agent\" -Method GET -TimeoutSec 120)",
-      "mcp__laravel-boost__last-error"
+      "mcp__laravel-boost__last-error",
+      "PowerShell(\\(Get-Content \"c:\\\\laragon\\\\www\\\\cekarah-ai\\\\.env\"\\) -replace \"AI_TEXT_MODEL=gemini-3\\\\.5-flash\", \"AI_TEXT_MODEL=gemini-2.5-flash\" | Set-Content \"c:\\\\laragon\\\\www\\\\cekarah-ai\\\\.env\" -Encoding utf8)",
+      "PowerShell(New-Item -ItemType Directory -Force \"c:\\\\laragon\\\\www\\\\cekarah-ai\\\\app\\\\Http\\\\Controllers\\\\Api\")"
     ]
   }
 }
