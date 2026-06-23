@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Ai\Agents\CekarahAgent;
+use App\Ai\Support\AgentReplyParser;
 use App\Http\Controllers\Controller;
 use App\Models\ChatSession;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +12,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Exceptions\FailoverableException;
 use Laravel\Ai\Responses\AgentResponse;
+use Laravel\Ai\Responses\StreamedAgentResponse;
+use Laravel\Ai\Streaming\Events\TextDelta;
+use Laravel\Ai\Streaming\Events\ToolCall;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class MessageController extends Controller
@@ -26,33 +31,110 @@ class MessageController extends Controller
 
         try {
             $response = $this->runAgent($session, $validated['content']);
-
-            $data = $this->parseAgentResponse($response->text);
+            $data = AgentReplyParser::parse($response->text);
 
             $session->update([
-                'last_intent' => $data['intent'] ?? null,
-                'last_confidence_pct' => isset($data['confidence'])
-                    ? (int) round($data['confidence'] * 100)
-                    : null,
+                'last_intent' => $data['intent'],
+                'last_confidence_pct' => (int) round($data['confidence'] * 100),
             ]);
 
-            return response()->json([
-                'reply' => $data['reply'] ?? '',
-                'intent' => $data['intent'] ?? 'unclear',
-                'confidence' => $data['confidence'] ?? 0,
-                'escalation_suggested' => $data['escalation_suggested'] ?? false,
-                'escalation_contacts' => $data['escalation_contacts'] ?? [],
-                'sources_used' => $data['sources_used'] ?? [],
-            ], 201);
-
+            return response()->json($data, 201);
         } catch (Throwable $e) {
-            Log::error('cekarah.message.error', [
-                'token' => $token,
-                'error' => $e->getMessage(),
-            ]);
+            Log::error('cekarah.message.error', ['token' => $token, 'error' => $e->getMessage()]);
 
             return response()->json($this->errorPayload($e), 200);
         }
+    }
+
+    /**
+     * Stream the assistant's reply token-by-token over Server-Sent Events.
+     *
+     * Event shapes (each as `data: {json}\n\n`):
+     *   { type: 'status', message }        — a tool is running
+     *   { type: 'chunk', content }         — a slice of the reply text
+     *   { type: 'done', reply, intent, ... } — authoritative final payload
+     *   { type: 'error', ...payload }      — failure, with emergency contacts
+     */
+    public function stream(Request $request, string $token): StreamedResponse
+    {
+        $validated = $request->validate([
+            'content' => 'required|string|max:2000',
+        ]);
+
+        $session = ChatSession::where('token', $token)->firstOrFail();
+        $content = $validated['content'];
+
+        return response()->stream(function () use ($session, $content) {
+            $delimiter = AgentReplyParser::DELIMITER;
+            $buffer = '';
+            $emitted = 0;
+            $metaReached = false;
+
+            try {
+                $stream = $this->agentForSession($session)->stream($content);
+
+                $stream->then(function (StreamedAgentResponse $response) use ($session) {
+                    if (! $session->conversation_id && $response->conversationId) {
+                        $session->update(['conversation_id' => $response->conversationId]);
+                    }
+                });
+
+                foreach ($stream as $event) {
+                    if ($event instanceof ToolCall) {
+                        $this->sse([
+                            'type' => 'status',
+                            'message' => $this->toolStatus($event->toolCall->name),
+                        ]);
+
+                        continue;
+                    }
+
+                    if (! $event instanceof TextDelta) {
+                        continue;
+                    }
+
+                    $buffer .= $event->delta;
+
+                    if ($metaReached) {
+                        continue;
+                    }
+
+                    $pos = strpos($buffer, $delimiter);
+
+                    if ($pos === false) {
+                        // Hold back the tail in case it is a partial delimiter.
+                        $safeEnd = max($emitted, strlen($buffer) - strlen($delimiter) + 1);
+                        if ($safeEnd > $emitted) {
+                            $this->sse(['type' => 'chunk', 'content' => substr($buffer, $emitted, $safeEnd - $emitted)]);
+                            $emitted = $safeEnd;
+                        }
+                    } else {
+                        if ($pos > $emitted) {
+                            $this->sse(['type' => 'chunk', 'content' => substr($buffer, $emitted, $pos - $emitted)]);
+                        }
+                        $emitted = $pos;
+                        $metaReached = true;
+                    }
+                }
+
+                $data = AgentReplyParser::parse($buffer);
+
+                $session->update([
+                    'last_intent' => $data['intent'],
+                    'last_confidence_pct' => (int) round($data['confidence'] * 100),
+                ]);
+
+                $this->sse(['type' => 'done', ...$data]);
+            } catch (Throwable $e) {
+                Log::error('cekarah.stream.error', ['token' => $session->token, 'error' => $e->getMessage()]);
+                $this->sse(['type' => 'error', ...$this->errorPayload($e)]);
+            }
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'X-Accel-Buffering' => 'no',
+            'Connection' => 'keep-alive',
+        ]);
     }
 
     public function index(string $token): JsonResponse
@@ -67,16 +149,56 @@ class MessageController extends Controller
     }
 
     /**
-     * Run the agent, retrying once on a transient provider overload.
+     * Map a tool name to a friendly Indonesian status label. Matches loosely
+     * since the SDK may surface either the snake_case name or the class
+     * basename (e.g. "search_knowledge_base" or "SearchKnowledgeBaseTool").
+     */
+    private function toolStatus(string $name): string
+    {
+        $key = strtolower($name);
+
+        return match (true) {
+            str_contains($key, 'search') => 'Mencari di knowledge base…',
+            str_contains($key, 'classify') || str_contains($key, 'intent') => 'Memahami kebutuhan…',
+            str_contains($key, 'fresh') => 'Memeriksa keterkinian data…',
+            str_contains($key, 'escalation') || str_contains($key, 'contact') => 'Menyiapkan kontak petugas…',
+            default => 'Memproses…',
+        };
+    }
+
+    /**
+     * Write a single SSE frame and flush it to the client immediately.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function sse(array $data): void
+    {
+        echo 'data: '.json_encode($data, JSON_UNESCAPED_UNICODE)."\n\n";
+
+        if (ob_get_level() > 0) {
+            @ob_flush();
+        }
+
+        flush();
+    }
+
+    /**
+     * Run the agent (non-streaming), retrying once on a transient overload.
      */
     private function runAgent(ChatSession $session, string $content): AgentResponse
     {
         for ($attempt = 1; $attempt <= 2; $attempt++) {
             try {
-                return $this->promptAgent($session, $content);
-            } catch (FailoverableException $e) {
-                // 503 overloaded / rate limited — retry once after a short backoff.
-                if ($attempt >= 2) {
+                $agent = $this->agentForSession($session);
+                $response = $agent->prompt($content);
+
+                if (! $session->conversation_id && $response->conversationId) {
+                    $session->update(['conversation_id' => $response->conversationId]);
+                }
+
+                return $response;
+            } catch (Throwable $e) {
+                if (! $e instanceof FailoverableException || $attempt >= 2) {
                     throw $e;
                 }
 
@@ -88,22 +210,16 @@ class MessageController extends Controller
     }
 
     /**
-     * Invoke the agent, continuing the conversation only when it still exists.
+     * Build a configured agent, continuing the conversation when it still exists.
      */
-    private function promptAgent(ChatSession $session, string $content): AgentResponse
+    private function agentForSession(ChatSession $session): CekarahAgent
     {
         $conversationExists = $session->conversation_id
             && DB::table('agent_conversations')->where('id', $session->conversation_id)->exists();
 
-        if ($conversationExists) {
-            return (new CekarahAgent)->continue($session->conversation_id, $session)->prompt($content);
-        }
-
-        // No conversation yet, or the stored one was pruned — start fresh.
-        $response = (new CekarahAgent)->forUser($session)->prompt($content);
-        $session->update(['conversation_id' => $response->conversationId]);
-
-        return $response;
+        return $conversationExists
+            ? (new CekarahAgent)->continue($session->conversation_id, $session)
+            : (new CekarahAgent)->forUser($session);
     }
 
     /**
@@ -132,18 +248,5 @@ class MessageController extends Controller
             ],
             'sources_used' => [],
         ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private function parseAgentResponse(string $text): array
-    {
-        // Strip markdown code fences if the model wrapped the JSON
-        if (preg_match('/```(?:json)?\s*([\s\S]+?)\s*```/s', $text, $matches)) {
-            $text = $matches[1];
-        }
-
-        return json_decode(trim($text), true) ?? ['reply' => $text];
     }
 }

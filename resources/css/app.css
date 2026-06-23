@@ -184,6 +184,11 @@
         animation: message-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
 
+    /* Blinking caret shown at the end of streaming assistant text. */
+    .animate-blink {
+        animation: blink 1s step-start infinite;
+    }
+
     /* Soft radial glow placed behind hero headlines. */
     .glow-red {
         background: radial-gradient(

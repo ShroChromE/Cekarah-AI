@@ -55,12 +55,45 @@ export default function MessageBubble(msg: ChatMessage) {
         escalation_suggested,
         escalation_contacts,
         sources_used,
+        isStreaming,
+        status,
     } = msg;
     const isError = intent === 'error';
     const showEscalation =
         (escalation_suggested ||
             (typeof confidence === 'number' && confidence < 0.6)) &&
         escalation_contacts?.length > 0;
+
+    // Still thinking: a tool is running and no reply text has arrived yet.
+    if (isStreaming && reply.length === 0) {
+        return (
+            <div className="animate-message-in flex justify-start gap-3">
+                <BrandMark size={32} className="mt-0.5 shrink-0" />
+                <div className="min-w-0 flex-1">
+                    <p className="mb-1 text-xs font-semibold text-slate-500">
+                        Cekarah
+                    </p>
+                    <div className="flex items-center gap-2 py-1">
+                        <div className="flex items-center gap-1">
+                            {[0, 150, 300].map((delay) => (
+                                <span
+                                    key={delay}
+                                    className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-slate-300"
+                                    style={{
+                                        animationDelay: `${delay}ms`,
+                                        animationDuration: '1s',
+                                    }}
+                                />
+                            ))}
+                        </div>
+                        <span className="text-xs text-slate-400">
+                            {status ?? 'Menyiapkan jawaban…'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="animate-message-in flex justify-start gap-3">
@@ -73,9 +106,13 @@ export default function MessageBubble(msg: ChatMessage) {
 
                 <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
                     {reply}
+                    {isStreaming && (
+                        <span className="animate-blink ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-slate-400" />
+                    )}
                 </div>
 
-                {!isError &&
+                {!isStreaming &&
+                    !isError &&
                     (intent ||
                         typeof confidence === 'number' ||
                         sources_used?.length > 0 ||

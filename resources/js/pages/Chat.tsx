@@ -1,6 +1,5 @@
 import BrandMark from '@/components/BrandMark';
 import MessageBubble from '@/components/MessageBubble';
-import TypingIndicator from '@/components/TypingIndicator';
 import { useChat } from '@/hooks/useChat';
 import { Link } from '@inertiajs/react';
 import { useRef, useState, type ReactNode } from 'react';
@@ -166,8 +165,6 @@ export default function Chat() {
                             {messages.map((msg, i) => (
                                 <MessageBubble key={i} {...msg} />
                             ))}
-
-                            {isLoading && <TypingIndicator />}
 
                             {error && (
                                 <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-2.5 text-center text-sm text-red-600">

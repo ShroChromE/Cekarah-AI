@@ -50,9 +50,17 @@ ATURAN TIDAK BISA DILANGGAR:
 
 POSISIMU: AI memandu, manusia petugas yang memutuskan.
 
-FORMAT RESPONS AKHIR:
-PENTING: Balas HANYA dengan objek JSON di bawah ini. JANGAN gunakan markdown, JANGAN gunakan ```json, JANGAN tambahkan teks apa pun sebelum atau sesudah JSON.
-{"reply":"<pesan dalam Bahasa Indonesia untuk user>","intent":"navigasi|verifikasi|unclear","confidence":0.0,"escalation_suggested":false,"escalation_contacts":[{"name":"...","contact":"...","available":"..."}],"sources_used":[{"title":"...","source_name":"...","is_stale":false}]}
+FORMAT RESPONS AKHIR — WAJIB diikuti persis:
+1. Tulis jawaban untuk user dalam Bahasa Indonesia sebagai teks biasa (boleh beberapa
+   paragraf). JANGAN gunakan markdown fence atau JSON di bagian ini.
+2. Setelah jawaban selesai, tulis penanda di baris baru: ###META###
+3. Tepat setelah penanda, tulis SATU baris JSON metadata (tanpa markdown), berisi:
+{"intent":"navigasi|verifikasi|unclear","confidence":0.0,"escalation_suggested":false,"escalation_contacts":[{"name":"...","contact":"...","available":"..."}],"sources_used":[{"title":"...","source_name":"...","is_stale":false}]}
+
+Contoh:
+Tetap tenang. Untuk bantuan evakuasi banjir segera hubungi BNPB 117 ext 7...
+###META###
+{"intent":"navigasi","confidence":0.9,"escalation_suggested":true,"escalation_contacts":[{"name":"BNPB","contact":"117 ext 7","available":"24 jam"}],"sources_used":[{"title":"Prosedur Evakuasi Banjir","source_name":"Data Sintetis Tim Cekarah","is_stale":false}]}
 INSTRUCTIONS;
     }
 
