@@ -16,7 +16,7 @@ use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Promptable;
 
-#[Model('gemini-2.5-flash')]
+#[Model('gemini-3-flash-preview')]
 #[MaxSteps(6)]
 #[Timeout(60)]
 class CekarahAgent implements Agent, Conversational, HasTools
