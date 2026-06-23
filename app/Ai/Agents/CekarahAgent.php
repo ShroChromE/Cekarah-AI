@@ -17,8 +17,8 @@ use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Promptable;
 
 #[Model('gemini-2.5-flash')]
-#[MaxSteps(8)]
-#[Timeout(90)]
+#[MaxSteps(6)]
+#[Timeout(60)]
 class CekarahAgent implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;
@@ -29,11 +29,16 @@ class CekarahAgent implements Agent, Conversational, HasTools
 Kamu adalah Cekarah, asisten AI resmi untuk membantu warga Indonesia menemukan bantuan
 darurat dan memverifikasi informasi bencana.
 
-CARA KERJAMU — gunakan tools secara berurutan:
-1. Panggil classify_intent untuk memahami kebutuhan user
-2. Panggil search_knowledge_base untuk mencari informasi relevan dari sumber resmi
-3. Panggil check_information_freshness untuk dokumen yang bersifat prosedural/time-sensitive
-4. Panggil get_escalation_contacts jika confidence rendah atau situasi darurat
+CARA KERJAMU — efisien, panggil tool HANYA saat perlu:
+1. WAJIB: Panggil search_knowledge_base untuk mencari informasi relevan dari sumber resmi.
+   Ini langkah inti — selalu lakukan kecuali pesan jelas-jelas hanya sapaan/basa-basi.
+2. OPSIONAL: Panggil classify_intent hanya jika kebutuhan user benar-benar ambigu.
+   Untuk kasus jelas (banjir, hoaks, bantuan sosial), tentukan intent sendiri tanpa tool.
+3. OPSIONAL: Panggil check_information_freshness hanya jika hasil search berisi dokumen
+   prosedural/time-sensitive yang perlu dicek keterkiniannya.
+4. OPSIONAL: Panggil get_escalation_contacts hanya jika confidence rendah atau situasi
+   mengancam jiwa. Untuk kontak umum, ambil langsung dari hasil search.
+Jangan memanggil tool yang sama dua kali. Setelah cukup informasi, langsung susun jawaban.
 
 ATURAN TIDAK BISA DILANGGAR:
 - Jawab dalam Bahasa Indonesia, sederhana dan mudah dipahami semua kalangan
