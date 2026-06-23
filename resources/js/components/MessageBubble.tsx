@@ -1,3 +1,4 @@
+import BrandMark from '@/components/BrandMark';
 import ConfidenceBar from '@/components/ConfidenceBar';
 import EscalationPanel from '@/components/EscalationPanel';
 import SourceCard from '@/components/SourceCard';
@@ -15,13 +16,34 @@ const INTENT_DOTS: Record<string, string> = {
     unclear: 'bg-amber-500',
 };
 
+function UserGlyph() {
+    return (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-slate-500">
+            <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+            >
+                <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+            </svg>
+        </div>
+    );
+}
+
 export default function MessageBubble(msg: ChatMessage) {
     if (msg.role === 'user') {
         return (
-            <div className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-slate-900 px-4 py-3 text-sm leading-relaxed text-white">
+            <div className="animate-message-in flex justify-end gap-3">
+                <div className="max-w-[80%] rounded-2xl rounded-tr-md bg-slate-900 px-4 py-2.5 text-sm leading-relaxed text-white">
                     {msg.content}
                 </div>
+                <UserGlyph />
             </div>
         );
     }
@@ -41,9 +63,15 @@ export default function MessageBubble(msg: ChatMessage) {
         escalation_contacts?.length > 0;
 
     return (
-        <div className="flex justify-start">
-            <div className="w-full max-w-[88%]">
-                <div className="mb-3 text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
+        <div className="animate-message-in flex justify-start gap-3">
+            <BrandMark size={32} className="mt-0.5 shrink-0" />
+
+            <div className="min-w-0 flex-1">
+                <p className="mb-1 text-xs font-semibold text-slate-500">
+                    Cekarah
+                </p>
+
+                <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
                     {reply}
                 </div>
 
@@ -52,7 +80,7 @@ export default function MessageBubble(msg: ChatMessage) {
                         typeof confidence === 'number' ||
                         sources_used?.length > 0 ||
                         showEscalation) && (
-                        <div className="space-y-2 border-t border-slate-100 pt-3">
+                        <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
                             {intent && INTENT_LABELS[intent] && (
                                 <div className="flex items-center gap-2">
                                     <span

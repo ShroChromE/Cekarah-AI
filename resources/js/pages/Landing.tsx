@@ -1,5 +1,45 @@
+import BrandMark from '@/components/BrandMark';
+import CountUp from '@/components/CountUp';
+import Reveal from '@/components/Reveal';
 import { Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+
+const HERO_STATS = [
+    { value: 1199, label: 'korban meninggal, bencana Sumatera Nov 2025' },
+    { value: 114200, label: 'warga mengungsi dalam 48 jam pertama' },
+    { value: 1890, label: 'konten hoaks teridentifikasi (Okt 2024–Des 2025)' },
+];
+
+const FLOW_STEPS = [
+    {
+        num: '01',
+        title: 'Input bebas',
+        desc: 'Tulis situasimu dengan kata-katamu sendiri',
+    },
+    {
+        num: '02',
+        title: 'Deteksi kebutuhan',
+        desc: 'Agent AI menentukan jalur yang tepat secara otomatis',
+    },
+    {
+        num: '03',
+        title: 'Navigasi atau Verifikasi',
+        desc: 'Langkah konkret + sumber resmi + kontak petugas',
+    },
+];
+
+const DATA_STATS = [
+    {
+        value: 390,
+        label: 'laporan kesejahteraan sosial 2024',
+        sub: '(Ombudsman)',
+    },
+    { value: 1890, label: 'konten hoaks teridentifikasi', sub: '(Kemkomdigi)' },
+    { value: 5, label: 'orang ditangkap karena hoaks bencana Aceh', sub: '' },
+];
+
+const RED = '#E63946';
+const RED_HOVER = '#c1121f';
 
 export default function Landing() {
     const [scrolled, setScrolled] = useState(false);
@@ -13,9 +53,9 @@ export default function Landing() {
 
     return (
         <div className="min-h-screen bg-white">
-            {/* Sticky Navbar — transparent over hero, solid once scrolled */}
+            {/* Navbar */}
             <nav
-                className={`fixed top-0 z-50 w-full px-6 py-4 transition-all duration-300 ${
+                className={`fixed top-0 z-50 w-full px-6 py-3.5 transition-all duration-300 ${
                     scrolled
                         ? 'border-b border-slate-800/50 backdrop-blur-md'
                         : 'border-b border-transparent'
@@ -27,19 +67,22 @@ export default function Landing() {
                 }}
             >
                 <div className="mx-auto flex max-w-6xl items-center justify-between">
-                    <span className="text-base font-semibold tracking-tight text-white">
-                        Cekarah
-                    </span>
+                    <div className="flex items-center gap-2.5">
+                        <BrandMark size={28} />
+                        <span className="font-semibold tracking-tight text-white">
+                            Cekarah
+                        </span>
+                    </div>
                     <div className="flex items-center gap-6">
                         <Link
                             href="/about"
-                            className="text-sm text-slate-400 transition-colors hover:text-white"
+                            className="text-sm text-slate-300 transition-colors hover:text-white"
                         >
                             Tentang
                         </Link>
                         <Link
                             href="/chat"
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+                            className="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/15 backdrop-blur-sm transition-all hover:bg-white/20"
                         >
                             Buka Chat
                         </Link>
@@ -47,128 +90,127 @@ export default function Landing() {
                 </div>
             </nav>
 
-            {/* SECTION 1 — HERO */}
+            {/* HERO */}
             <section
-                id="hero"
-                className="flex min-h-screen items-center pt-16"
+                className="relative flex min-h-screen items-center overflow-hidden pt-16"
                 style={{ backgroundColor: '#0A0F1E' }}
             >
-                <div className="mx-auto w-full max-w-6xl px-6 py-20">
+                <div className="glow-red pointer-events-none absolute -top-1/4 left-1/4 h-[120%] w-[60%]" />
+                <div className="relative mx-auto w-full max-w-6xl px-6 py-20">
                     <div className="flex flex-col gap-16 lg:flex-row lg:items-center">
-                        {/* Left column */}
+                        {/* Left */}
                         <div className="lg:w-3/5">
-                            <p
-                                className="mb-6 text-xs text-slate-400"
-                                style={{ letterSpacing: '0.15em' }}
-                            >
-                                EKSHIBISI KA — LKS DIKMEN NASIONAL 2026
-                            </p>
-                            <h1
-                                className="font-black text-white"
-                                style={{
-                                    fontSize: 'clamp(2.5rem, 7vw, 4.5rem)',
-                                    letterSpacing: '-0.03em',
-                                    lineHeight: 1.0,
-                                }}
-                            >
-                                48 jam pertama
-                                <br />
-                                yang menentukan.
-                            </h1>
-                            <p className="mt-6 max-w-md text-lg leading-relaxed text-slate-400">
-                                Cekarah membantu warga menemukan bantuan resmi
-                                dan memverifikasi informasi dalam situasi
-                                darurat bencana.
-                            </p>
-                            <div className="mt-10 flex items-center gap-6">
-                                <Link
-                                    href="/chat"
-                                    className="rounded-lg px-8 py-4 text-base font-semibold text-white transition-colors"
-                                    style={{ backgroundColor: '#E63946' }}
-                                    onMouseOver={(e) =>
-                                        (e.currentTarget.style.backgroundColor =
-                                            '#c1121f')
-                                    }
-                                    onMouseOut={(e) =>
-                                        (e.currentTarget.style.backgroundColor =
-                                            '#E63946')
-                                    }
+                            <Reveal>
+                                <p
+                                    className="mb-6 text-xs font-medium text-slate-400"
+                                    style={{ letterSpacing: '0.18em' }}
                                 >
-                                    Mulai sekarang →
-                                </Link>
-                                <Link
-                                    href="/about"
-                                    className="text-sm text-slate-400 underline transition-colors hover:text-slate-200"
+                                    EKSHIBISI KA — LKS DIKMEN NASIONAL 2026
+                                </p>
+                            </Reveal>
+                            <Reveal delay={80}>
+                                <h1
+                                    className="heading-tight font-black text-white"
+                                    style={{
+                                        fontSize: 'clamp(2.5rem, 7vw, 4.75rem)',
+                                    }}
                                 >
-                                    Pelajari cara kerja
-                                </Link>
-                            </div>
+                                    48 jam pertama
+                                    <br />
+                                    yang menentukan.
+                                </h1>
+                            </Reveal>
+                            <Reveal delay={160}>
+                                <p className="mt-6 max-w-md text-lg leading-relaxed text-slate-400">
+                                    Cekarah membantu warga menemukan bantuan
+                                    resmi dan memverifikasi informasi dalam
+                                    situasi darurat bencana.
+                                </p>
+                            </Reveal>
+                            <Reveal delay={240}>
+                                <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-4">
+                                    <Link
+                                        href="/chat"
+                                        className="group inline-flex items-center gap-2 rounded-lg px-8 py-4 text-base font-semibold text-white shadow-lg shadow-red-900/30 transition-all hover:-translate-y-0.5"
+                                        style={{ backgroundColor: RED }}
+                                        onMouseOver={(e) =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                RED_HOVER)
+                                        }
+                                        onMouseOut={(e) =>
+                                            (e.currentTarget.style.backgroundColor =
+                                                RED)
+                                        }
+                                    >
+                                        Mulai sekarang
+                                        <span className="transition-transform group-hover:translate-x-1">
+                                            →
+                                        </span>
+                                    </Link>
+                                    <Link
+                                        href="/about"
+                                        className="text-sm text-slate-400 underline-offset-4 transition-colors hover:text-slate-200 hover:underline"
+                                    >
+                                        Pelajari cara kerja
+                                    </Link>
+                                </div>
+                            </Reveal>
                         </div>
 
-                        {/* Right column — stat ticker (desktop only) */}
+                        {/* Right — stat ticker */}
                         <div className="hidden lg:block lg:w-2/5">
-                            <div className="space-y-0">
-                                {[
-                                    {
-                                        num: '1.199',
-                                        label: 'korban meninggal, bencana Sumatera Nov 2025',
-                                    },
-                                    {
-                                        num: '114.200',
-                                        label: 'warga mengungsi dalam 48 jam pertama',
-                                    },
-                                    {
-                                        num: '1.890',
-                                        label: 'konten hoaks teridentifikasi (Okt 2024–Des 2025)',
-                                    },
-                                ].map((stat, i) => (
-                                    <div
-                                        key={i}
-                                        className="py-6"
-                                        style={{
-                                            borderTop:
-                                                i === 0
-                                                    ? 'none'
-                                                    : '1px solid rgba(255,255,255,0.1)',
-                                        }}
-                                    >
-                                        <p
-                                            className="font-black text-white tabular-nums"
+                            <Reveal delay={300}>
+                                <div className="space-y-0">
+                                    {HERO_STATS.map((stat, i) => (
+                                        <div
+                                            key={i}
+                                            className="py-6"
                                             style={{
-                                                fontSize: '3.5rem',
-                                                lineHeight: 1.1,
-                                                letterSpacing: '-0.02em',
+                                                borderTop:
+                                                    i === 0
+                                                        ? 'none'
+                                                        : '1px solid rgba(255,255,255,0.1)',
                                             }}
                                         >
-                                            {stat.num}
-                                        </p>
-                                        <p className="mt-1 text-sm text-slate-400">
-                                            {stat.label}
-                                        </p>
-                                    </div>
-                                ))}
-                            </div>
+                                            <p
+                                                className="heading-tight font-black text-white"
+                                                style={{ fontSize: '3.5rem' }}
+                                            >
+                                                <CountUp value={stat.value} />
+                                            </p>
+                                            <p className="mt-1 text-sm text-slate-400">
+                                                {stat.label}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Reveal>
                         </div>
                     </div>
                 </div>
-                <div
-                    className="absolute bottom-0 left-0 w-full"
-                    style={{ borderTop: '1px solid', borderColor: '#1e293b' }}
-                />
+
+                {/* Scroll hint */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+                    <div className="flex h-9 w-5 items-start justify-center rounded-full border border-slate-700 p-1.5">
+                        <div className="h-1.5 w-1 animate-bounce rounded-full bg-slate-500" />
+                    </div>
+                </div>
             </section>
 
-            {/* SECTION 2 — MASALAH */}
-            <section id="masalah" className="bg-white py-24">
+            {/* MASALAH */}
+            <section className="bg-white py-24">
                 <div className="mx-auto max-w-6xl px-6">
-                    <h2
-                        className="max-w-2xl text-3xl font-bold text-slate-900"
-                        style={{ letterSpacing: '-0.01em' }}
-                    >
-                        Dalam 48 jam pertama krisis, warga menghadapi dua
-                        masalah sekaligus.
-                    </h2>
-                    <div className="mt-12 grid gap-12 lg:grid-cols-2">
-                        <div className="border-l-4 border-slate-900 pl-6">
+                    <Reveal>
+                        <h2 className="max-w-2xl text-3xl font-bold tracking-tight text-slate-900">
+                            Dalam 48 jam pertama krisis, warga menghadapi dua
+                            masalah sekaligus.
+                        </h2>
+                    </Reveal>
+                    <div className="mt-12 grid gap-10 lg:grid-cols-2">
+                        <Reveal
+                            delay={80}
+                            className="border-l-4 border-slate-900 pl-6"
+                        >
                             <p className="mb-2 font-mono text-xs text-slate-400">
                                 01
                             </p>
@@ -180,10 +222,10 @@ export default function Landing() {
                                 Warga kebingungan menentukan lembaga yang tepat,
                                 dokumen yang dibutuhkan, dan langkah pertama.
                             </p>
-                        </div>
-                        <div
-                            className="border-l-4 pl-6"
-                            style={{ borderLeftColor: '#E63946' }}
+                        </Reveal>
+                        <Reveal
+                            delay={160}
+                            className="border-l-4 border-l-[#E63946] pl-6"
                         >
                             <p className="mb-2 font-mono text-xs text-slate-400">
                                 02
@@ -197,52 +239,28 @@ export default function Landing() {
                                 naik" memicu evakuasi panik, mengacaukan operasi
                                 SAR.
                             </p>
-                        </div>
+                        </Reveal>
                     </div>
                 </div>
             </section>
 
-            {/* SECTION 3 — CARA KERJA */}
-            <section
-                id="cara-kerja"
-                className="py-24"
-                style={{ backgroundColor: '#F0F4FF' }}
-            >
+            {/* CARA KERJA */}
+            <section className="py-24" style={{ backgroundColor: '#F0F4FF' }}>
                 <div className="mx-auto max-w-6xl px-6">
-                    <p className="text-xs tracking-widest text-slate-400 uppercase">
-                        CARA KERJA
-                    </p>
-                    <h2
-                        className="mt-2 font-black text-slate-900"
-                        style={{
-                            fontSize: '2.25rem',
-                            letterSpacing: '-0.02em',
-                        }}
-                    >
-                        Satu kotak chat. Dua kemampuan.
-                    </h2>
+                    <Reveal>
+                        <p className="text-xs font-medium tracking-widest text-slate-400 uppercase">
+                            Cara kerja
+                        </p>
+                        <h2 className="heading-tight mt-2 text-4xl font-black text-slate-900">
+                            Satu kotak chat. Dua kemampuan.
+                        </h2>
+                    </Reveal>
 
-                    {/* Flow diagram */}
                     <div className="mt-12 flex flex-col gap-8 lg:flex-row lg:items-start lg:gap-0">
-                        {[
-                            {
-                                num: '01',
-                                title: 'Input bebas',
-                                desc: 'Tulis situasimu dengan kata-katamu sendiri',
-                            },
-                            {
-                                num: '02',
-                                title: 'Deteksi kebutuhan',
-                                desc: 'Agent AI menentukan jalur yang tepat secara otomatis',
-                            },
-                            {
-                                num: '03',
-                                title: 'Navigasi atau Verifikasi',
-                                desc: 'Langkah konkret + sumber resmi + kontak petugas',
-                            },
-                        ].map((step, i) => (
-                            <div
+                        {FLOW_STEPS.map((step, i) => (
+                            <Reveal
                                 key={i}
+                                delay={i * 100}
                                 className="flex flex-1 items-start gap-4 lg:flex-col"
                             >
                                 <div className="flex-1">
@@ -256,7 +274,7 @@ export default function Landing() {
                                         {step.desc}
                                     </p>
                                 </div>
-                                {i < 2 && (
+                                {i < FLOW_STEPS.length - 1 && (
                                     <div
                                         className="hidden shrink-0 items-center lg:flex"
                                         style={{ width: '3rem' }}
@@ -267,93 +285,75 @@ export default function Landing() {
                                         </span>
                                     </div>
                                 )}
-                            </div>
+                            </Reveal>
                         ))}
                     </div>
 
-                    {/* Two-column features */}
                     <div className="mt-16 grid gap-8 lg:grid-cols-2">
-                        <div>
+                        <Reveal className="rounded-2xl border border-slate-200 bg-white p-7">
                             <h3 className="font-semibold text-slate-900">
                                 Navigasi Bantuan
                             </h3>
                             <p className="mt-1 text-sm font-medium text-slate-500">
                                 Temukan bantuan yang tepat
                             </p>
-                            <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                            <ul className="mt-4 space-y-2.5 text-sm text-slate-600">
                                 {[
                                     'Prosedur evakuasi banjir step-by-step',
                                     'Cara daftar bantuan sosial darurat (PKH, BPNT)',
                                     'Kontak resmi BNPB, Basarnas, PMI, Kemensos',
                                 ].map((item) => (
-                                    <li key={item} className="flex gap-2">
+                                    <li key={item} className="flex gap-2.5">
                                         <span className="text-blue-500">→</span>
                                         {item}
                                     </li>
                                 ))}
                             </ul>
-                        </div>
-                        <div>
+                        </Reveal>
+                        <Reveal
+                            delay={120}
+                            className="rounded-2xl border border-slate-200 bg-white p-7"
+                        >
                             <h3 className="font-semibold text-slate-900">
                                 Verifikasi Klaim
                             </h3>
                             <p className="mt-1 text-sm font-medium text-slate-500">
                                 Cek sebelum percaya
                             </p>
-                            <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                            <ul className="mt-4 space-y-2.5 text-sm text-slate-600">
                                 {[
                                     'Cross-check klaim dengan sumber BNPB & BMKG',
                                     'Penjelasan dengan alasan, bukan vonis "hoaks"',
                                     'Rujukan langsung ke sumber resmi',
                                 ].map((item) => (
-                                    <li key={item} className="flex gap-2">
-                                        <span className="text-purple-500">
+                                    <li key={item} className="flex gap-2.5">
+                                        <span className="text-violet-500">
                                             →
                                         </span>
                                         {item}
                                     </li>
                                 ))}
                             </ul>
-                        </div>
+                        </Reveal>
                     </div>
                 </div>
             </section>
 
-            {/* SECTION 4 — DATA STATISTIK */}
-            <section
-                id="data"
-                className="py-24"
-                style={{ backgroundColor: '#0F172A' }}
-            >
+            {/* DATA */}
+            <section className="py-24" style={{ backgroundColor: '#0F172A' }}>
                 <div className="mx-auto max-w-6xl px-6">
-                    <div className="grid grid-cols-1 gap-8 text-center lg:grid-cols-3">
-                        {[
-                            {
-                                num: '390',
-                                label: 'laporan kesejahteraan sosial 2024',
-                                sub: '(Ombudsman)',
-                            },
-                            {
-                                num: '1.890',
-                                label: 'konten hoaks teridentifikasi',
-                                sub: '(Kemkomdigi)',
-                            },
-                            {
-                                num: '5',
-                                label: 'orang ditangkap karena hoaks bencana Aceh',
-                                sub: '',
-                            },
-                        ].map((stat) => (
-                            <div key={stat.num} className="py-4">
+                    <div className="grid grid-cols-1 gap-10 text-center lg:grid-cols-3">
+                        {DATA_STATS.map((stat, i) => (
+                            <Reveal
+                                key={stat.label}
+                                delay={i * 120}
+                                className="py-4"
+                            >
                                 <p
-                                    className="font-black text-white tabular-nums"
-                                    style={{
-                                        fontSize: '3.5rem',
-                                        letterSpacing: '-0.02em',
-                                        lineHeight: 1.1,
-                                    }}
+                                    className="heading-tight font-black text-white"
+                                    style={{ fontSize: '3.5rem' }}
                                 >
-                                    {stat.num}
+                                    <CountUp value={stat.value} />
                                 </p>
                                 <p className="mt-2 text-sm text-slate-400">
                                     {stat.label}
@@ -363,36 +363,40 @@ export default function Landing() {
                                         {stat.sub}
                                     </p>
                                 )}
-                            </div>
+                            </Reveal>
                         ))}
                     </div>
-                    <p className="mt-8 text-center text-sm text-slate-500">
-                        Data ini adalah alasan Cekarah dibangun.
-                    </p>
+                    <Reveal>
+                        <p className="mt-10 text-center text-sm text-slate-500">
+                            Data ini adalah alasan Cekarah dibangun.
+                        </p>
+                    </Reveal>
                 </div>
             </section>
 
-            {/* SECTION 5 — RESPONSIBLE AI */}
-            <section id="responsible-ai" className="bg-white py-24">
+            {/* RESPONSIBLE AI */}
+            <section className="bg-white py-24">
                 <div className="mx-auto max-w-6xl px-6">
-                    <p className="text-xs tracking-widest text-slate-400 uppercase">
-                        RESPONSIBLE AI
-                    </p>
-                    <h2
-                        className="mt-2 text-4xl font-black text-slate-900"
-                        style={{ letterSpacing: '-0.02em' }}
-                    >
-                        AI ini punya batas. Sengaja.
-                    </h2>
-                    <div className="mt-12 grid gap-12 lg:grid-cols-2">
-                        <p className="leading-relaxed text-slate-600">
-                            Cekarah adalah navigator awal, bukan otoritas final.
-                            Setiap respons menyertakan rujukan sumber resmi dan
-                            kontak petugas manusia. Jika tidak yakin, sistem
-                            mendorong user untuk menghubungi petugas langsung —
-                            bukan mencoba menjawab dengan tebakan.
+                    <Reveal>
+                        <p className="text-xs font-medium tracking-widest text-slate-400 uppercase">
+                            Responsible AI
                         </p>
-                        <div className="space-y-4 text-sm">
+                        <h2 className="heading-tight mt-2 text-4xl font-black text-slate-900">
+                            AI ini punya batas. Sengaja.
+                        </h2>
+                    </Reveal>
+                    <div className="mt-12 grid gap-12 lg:grid-cols-2">
+                        <Reveal>
+                            <p className="leading-relaxed text-slate-600">
+                                Cekarah adalah navigator awal, bukan otoritas
+                                final. Setiap respons menyertakan rujukan sumber
+                                resmi dan kontak petugas manusia. Jika tidak
+                                yakin, sistem mendorong user untuk menghubungi
+                                petugas langsung — bukan mencoba menjawab dengan
+                                tebakan.
+                            </p>
+                        </Reveal>
+                        <Reveal delay={120} className="space-y-4 text-sm">
                             {[
                                 {
                                     label: 'Data sumber',
@@ -407,56 +411,63 @@ export default function Landing() {
                                     value: 'Kontak petugas resmi tersedia di setiap respons',
                                 },
                             ].map((item) => (
-                                <div key={item.label} className="flex gap-4">
+                                <div
+                                    key={item.label}
+                                    className="flex gap-4 border-b border-slate-100 pb-4"
+                                >
                                     <span className="w-28 shrink-0 font-medium text-slate-500">
                                         {item.label}
                                     </span>
                                     <span className="text-slate-700">
-                                        : {item.value}
+                                        {item.value}
                                     </span>
                                 </div>
                             ))}
-                        </div>
+                        </Reveal>
                     </div>
                 </div>
             </section>
 
-            {/* SECTION 6 — CTA PENUTUP */}
+            {/* CTA */}
             <section
-                id="cta"
-                className="py-32 text-center"
+                className="relative overflow-hidden py-32 text-center"
                 style={{ backgroundColor: '#0A0F1E' }}
             >
-                <div className="mx-auto max-w-2xl px-6">
-                    <h2
-                        className="font-black text-white"
-                        style={{
-                            fontSize: 'clamp(3rem, 8vw, 4rem)',
-                            letterSpacing: '-0.03em',
-                        }}
-                    >
-                        Coba sekarang.
-                    </h2>
-                    <div className="mt-8">
-                        <Link
-                            href="/chat"
-                            className="inline-block rounded-lg px-10 py-5 text-lg font-semibold text-white transition-colors"
-                            style={{ backgroundColor: '#E63946' }}
-                            onMouseOver={(e) =>
-                                (e.currentTarget.style.backgroundColor =
-                                    '#c1121f')
-                            }
-                            onMouseOut={(e) =>
-                                (e.currentTarget.style.backgroundColor =
-                                    '#E63946')
-                            }
+                <div className="glow-red pointer-events-none absolute inset-0" />
+                <div className="relative mx-auto max-w-2xl px-6">
+                    <Reveal>
+                        <h2
+                            className="heading-tight font-black text-white"
+                            style={{ fontSize: 'clamp(3rem, 8vw, 4rem)' }}
                         >
-                            Mulai percakapan →
-                        </Link>
-                    </div>
-                    <p className="mt-4 text-sm text-slate-500">
-                        Tanpa akun. Tanpa data pribadi.
-                    </p>
+                            Coba sekarang.
+                        </h2>
+                    </Reveal>
+                    <Reveal delay={120}>
+                        <div className="mt-8">
+                            <Link
+                                href="/chat"
+                                className="group inline-flex items-center gap-2 rounded-lg px-10 py-5 text-lg font-semibold text-white shadow-lg shadow-red-900/30 transition-all hover:-translate-y-0.5"
+                                style={{ backgroundColor: RED }}
+                                onMouseOver={(e) =>
+                                    (e.currentTarget.style.backgroundColor =
+                                        RED_HOVER)
+                                }
+                                onMouseOut={(e) =>
+                                    (e.currentTarget.style.backgroundColor =
+                                        RED)
+                                }
+                            >
+                                Mulai percakapan
+                                <span className="transition-transform group-hover:translate-x-1">
+                                    →
+                                </span>
+                            </Link>
+                        </div>
+                        <p className="mt-4 text-sm text-slate-500">
+                            Tanpa akun. Tanpa data pribadi.
+                        </p>
+                    </Reveal>
                 </div>
             </section>
 
@@ -466,11 +477,12 @@ export default function Landing() {
                 style={{ backgroundColor: '#060B14' }}
             >
                 <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-slate-600 lg:flex-row">
-                    <div>
+                    <div className="flex items-center gap-2.5">
+                        <BrandMark size={22} />
                         <span className="font-medium text-slate-400">
                             Cekarah
                         </span>
-                        <span className="ml-2">· LKS Dikmen Nasional 2026</span>
+                        <span>· LKS Dikmen Nasional 2026</span>
                     </div>
                     <div className="flex gap-6">
                         <Link
