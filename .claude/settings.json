@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(vendor/bin/pint app/Models/KnowledgeDocument.php app/Models/KnowledgeChunk.php app/Models/ChatSession.php app/Services/KnowledgeIndexer.php app/Console/Commands/IndexKnowledge.php database/seeders/DatabaseSeeder.php --format agent)"
+    ]
+  }
+}
