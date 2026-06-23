@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(vendor/bin/pint app/Models/KnowledgeDocument.php app/Models/KnowledgeChunk.php app/Models/ChatSession.php app/Services/KnowledgeIndexer.php app/Console/Commands/IndexKnowledge.php database/seeders/DatabaseSeeder.php --format agent)"
+      "Bash(vendor/bin/pint app/Models/KnowledgeDocument.php app/Models/KnowledgeChunk.php app/Models/ChatSession.php app/Services/KnowledgeIndexer.php app/Console/Commands/IndexKnowledge.php database/seeders/DatabaseSeeder.php --format agent)",
+      "PowerShell(Select-String -Path \"c:\\\\laragon\\\\www\\\\cekarah-ai\\\\.env\" -Pattern \"GEMINI|AI_PROVIDER|DB_\" | Select-Object -ExpandProperty Line | Where-Object { $_ -notmatch \"^#\" })",
+      "mcp__laravel-boost__get-absolute-url",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:8000/api/test-agent\" -Method GET -TimeoutSec 120)",
+      "mcp__laravel-boost__last-error"
     ]
   }
 }
