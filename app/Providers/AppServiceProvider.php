@@ -5,6 +5,7 @@ namespace App\Providers;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -24,6 +25,20 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureSsl();
+    }
+
+    /**
+     * Point cURL to the correct CA bundle for this machine.
+     * Laragon's php.ini may still reference a stale path until Apache restarts.
+     */
+    protected function configureSsl(): void
+    {
+        $caBundle = 'C:\laragon\etc\ssl\cacert.pem';
+
+        if (file_exists($caBundle)) {
+            Http::globalOptions(['verify' => $caBundle]);
+        }
     }
 
     /**
