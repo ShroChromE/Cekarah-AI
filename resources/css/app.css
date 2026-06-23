@@ -139,5 +139,20 @@
 
     body {
         @apply bg-background text-foreground;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+@layer utilities {
+    /* Tight, editorial heading spacing used across Cekarah surfaces. */
+    .heading-tight {
+        letter-spacing: -0.03em;
+        line-height: 1.05;
     }
 }

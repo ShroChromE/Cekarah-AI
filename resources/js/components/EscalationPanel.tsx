@@ -8,23 +8,25 @@ export default function EscalationPanel({ contacts }: Props) {
     if (!contacts.length) return null;
 
     return (
-        <div
-            className="mt-3 rounded-md border px-4 py-3"
-            style={{ backgroundColor: '#FEF2F2', borderColor: '#FECACA' }}
-        >
-            <p className="mb-2 text-xs font-semibold" style={{ color: '#B91C1C' }}>
-                Hubungi petugas resmi untuk konfirmasi:
+        <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-3">
+            <p className="mb-2 text-xs font-semibold tracking-wide text-red-700 uppercase">
+                Hubungi petugas resmi
             </p>
-            <ul className="space-y-1">
+            <div className="space-y-1.5">
                 {contacts.map((c, i) => (
-                    <li key={i} className="text-xs" style={{ color: '#B91C1C' }}>
-                        <span className="font-medium">{c.name}</span>
-                        {' — '}
-                        <span className="font-mono">{c.contact}</span>
-                        <span className="ml-1 text-red-400">({c.available})</span>
-                    </li>
+                    <div
+                        key={i}
+                        className="flex items-baseline justify-between gap-3"
+                    >
+                        <span className="text-xs font-medium text-red-800">
+                            {c.name}
+                        </span>
+                        <span className="shrink-0 font-mono text-xs text-red-600">
+                            {c.contact}
+                        </span>
+                    </div>
                 ))}
-            </ul>
+            </div>
         </div>
     );
 }

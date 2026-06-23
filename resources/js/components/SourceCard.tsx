@@ -6,17 +6,21 @@ type Props = {
 
 export default function SourceCard({ source }: Props) {
     return (
-        <div className="flex items-start gap-1.5 text-xs text-slate-500">
-            <span className="mt-px text-slate-300">↳</span>
-            <span>
-                {source.title}
-                <span className="ml-1 text-slate-400">· {source.source_name}</span>
-                {source.is_stale && (
-                    <span className="ml-1 text-amber-500" title="Data mungkin sudah diperbarui">
-                        ⚠ Mungkin sudah diperbarui
-                    </span>
-                )}
-            </span>
-        </div>
+        <span
+            className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-xs transition-colors ${
+                source.is_stale
+                    ? 'border-amber-200 bg-amber-50 text-amber-700'
+                    : 'border-slate-200 bg-slate-50 text-slate-500'
+            }`}
+            title={source.title}
+        >
+            {source.is_stale && <span aria-hidden>⚠</span>}
+            <span>{source.source_name}</span>
+            {source.is_stale && (
+                <span className="text-amber-500">
+                    · mungkin sudah diperbarui
+                </span>
+            )}
+        </span>
     );
 }
