@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react';
 
 // Inline markdown the model commonly emits: links, **bold**, *italic*.
-// Links are matched first; bold before italic so "**x**" never matches as italic.
-const PATTERN = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*\n]+)\*/g;
+// Links first; bold before italic so "**x**" never matches as italic. Italic
+// requires a non-space, non-asterisk right after the opening "*" so it can't
+// latch onto list markers or stray asterisks.
+const PATTERN = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^\s*][^*\n]*?)\*/g;
 
 /**
  * Renders a subset of inline markdown (bold, italic, links) as real elements.
@@ -10,15 +12,19 @@ const PATTERN = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*\n]+)\*/g;
  * (e.g. mid-stream) simply render literally until their closer arrives.
  */
 export default function FormattedText({ text }: { text: string }) {
+    // Turn markdown list markers ("* item" / "- item") at line start into a
+    // bullet glyph so a leading "*" is never mistaken for emphasis.
+    const normalized = text.replace(/^[ \t]*[*-][ \t]+/gm, '• ');
+
     const nodes: ReactNode[] = [];
     let last = 0;
     let key = 0;
     let match: RegExpExecArray | null;
 
     PATTERN.lastIndex = 0;
-    while ((match = PATTERN.exec(text)) !== null) {
+    while ((match = PATTERN.exec(normalized)) !== null) {
         if (match.index > last) {
-            nodes.push(text.slice(last, match.index));
+            nodes.push(normalized.slice(last, match.index));
         }
 
         const [full, linkText, linkUrl, bold, italic] = match;
@@ -52,8 +58,8 @@ export default function FormattedText({ text }: { text: string }) {
         last = match.index + full.length;
     }
 
-    if (last < text.length) {
-        nodes.push(text.slice(last));
+    if (last < normalized.length) {
+        nodes.push(normalized.slice(last));
     }
 
     return <>{nodes}</>;
