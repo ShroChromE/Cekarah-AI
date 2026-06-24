@@ -104,4 +104,4 @@ Poin yang **sebaiknya ditambahkan** ke bagian caveats proposal, berdasarkan kete
 2. **Sifat data sintetis:** dataset bersifat ilustratif (ditandai `is_simulated`), dibangun dari pola sumber resmi — bukan data operasional real-time. Angka & lokasi adalah simulasi yang realistis, bukan laporan resmi terverifikasi saat ini.
 3. **Ketergantungan pada Gemini tool-calling:** kualitas routing bergantung pada kemampuan reasoning model. Pada layanan gratis, ketersediaan model dapat terganggu (mis. respons "sistem sibuk"/503); sudah ditangani dengan retry & pesan fallback berisi kontak darurat.
 4. **pgvector belum aktif di lingkungan dev:** kemiripan semantik dihitung di aplikasi (cosine PHP). Memadai untuk skala demo; perlu pgvector untuk skala besar.
-5. **Peta butuh API key:** peta posko interaktif memerlukan Google Maps API key; tanpa itu, sistem menampilkan fallback daftar lokasi + tautan ke Google Maps.
+5. **Peta:** peta posko interaktif memakai Leaflet + OpenStreetMap (gratis, tanpa API key). Bergantung pada ketersediaan tile OpenStreetMap; bila gagal dimuat, sistem menampilkan fallback daftar lokasi + tautan ke Google Maps.

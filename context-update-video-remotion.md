@@ -92,7 +92,7 @@ Narasi: "Cekarah — navigator awal warga di 48 jam pertama yang menentukan."
 
 ## 4. Catatan Teknis untuk Eksekusi Remotion (sesi berikutnya)
 
-- **Rekaman layar:** rekam ulang demo dari aplikasi terbaru agar menampilkan streaming, peta, dan sumber yang bisa diklik. Untuk peta, set `VITE_GOOGLE_MAPS_API_KEY` lalu `npm run build`/`npm run dev` sebelum merekam (tanpa key hanya muncul fallback daftar).
+- **Rekaman layar:** rekam ulang demo dari aplikasi terbaru agar menampilkan streaming, peta, dan sumber yang bisa diklik. Peta memakai **Leaflet + OpenStreetMap** — aktif tanpa API key, jadi langsung bisa direkam.
 - **Konsistensi visual:** samakan palet dengan UI terbaru — navy `#0A0F1E`, aksen merah `#E63946`, biru interaktif `#3B82F6`.
 - **Durasi:** prioritaskan Scene 5 (peta) sebagai momen puncak; jaga total durasi sesuai ketentuan video pitch.
 - **Sebelum mengubah apa pun:** audit dulu struktur scene project Remotion yang sebenarnya (bagian 0), lalu petakan ke penanda KEEP/UPDATE/REMOVE (bagian 2) dan storyboard (bagian 3).

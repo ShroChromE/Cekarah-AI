@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 
 declare global {
     interface Window {
-        google?: any;
-        __cekarahMapsPromise?: Promise<void>;
+        L?: any;
+        __cekarahLeafletPromise?: Promise<void>;
     }
 }
 
@@ -16,23 +16,31 @@ const TYPE_LABELS: Record<string, string> = {
     logistics_post: 'Pos Logistik',
 };
 
-const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+const LEAFLET_CSS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+const LEAFLET_JS = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 
-function loadGoogleMaps(apiKey: string): Promise<void> {
-    if (window.google?.maps) return Promise.resolve();
-    if (window.__cekarahMapsPromise) return window.__cekarahMapsPromise;
+/** Load Leaflet (CSS + JS) from the CDN once, shared across all map instances. */
+function loadLeaflet(): Promise<void> {
+    if (window.L) return Promise.resolve();
+    if (window.__cekarahLeafletPromise) return window.__cekarahLeafletPromise;
 
-    window.__cekarahMapsPromise = new Promise((resolve, reject) => {
+    window.__cekarahLeafletPromise = new Promise((resolve, reject) => {
+        if (!document.querySelector(`link[href="${LEAFLET_CSS}"]`)) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = LEAFLET_CSS;
+            document.head.appendChild(link);
+        }
+
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+        script.src = LEAFLET_JS;
         script.async = true;
-        script.defer = true;
         script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Gagal memuat Google Maps'));
+        script.onerror = () => reject(new Error('Gagal memuat Leaflet'));
         document.head.appendChild(script);
     });
 
-    return window.__cekarahMapsPromise;
+    return window.__cekarahLeafletPromise;
 }
 
 function typeLabel(type: string | null): string {
@@ -43,6 +51,15 @@ function mapsLink(loc: MapLocation): string {
     return `https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}`;
 }
 
+function numberedIcon(L: any, n: number) {
+    return L.divIcon({
+        className: '',
+        html: `<div style="display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:9999px;background:#3B82F6;color:#fff;font:600 12px system-ui;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">${n}</div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+    });
+}
+
 export default function ShelterMap({
     locations,
 }: {
@@ -51,50 +68,52 @@ export default function ShelterMap({
     const mapEl = useRef<HTMLDivElement>(null);
     const mapRef = useRef<any>(null);
     const markersRef = useRef<any[]>([]);
-    const infoRef = useRef<any>(null);
     const [active, setActive] = useState(0);
-    const [status, setStatus] = useState<'idle' | 'ready' | 'error' | 'nokey'>(
-        API_KEY ? 'idle' : 'nokey',
+    const [status, setStatus] = useState<'loading' | 'ready' | 'error'>(
+        'loading',
     );
 
     useEffect(() => {
-        if (!API_KEY || !mapEl.current || locations.length === 0) return;
+        if (!mapEl.current || locations.length === 0) return;
 
         let cancelled = false;
 
-        loadGoogleMaps(API_KEY)
+        loadLeaflet()
             .then(() => {
-                if (cancelled || !mapEl.current) return;
-                const g = window.google;
+                if (cancelled || !mapEl.current || mapRef.current) return;
+                const L = window.L;
 
-                const map = new g.maps.Map(mapEl.current, {
-                    center: {
-                        lat: locations[0].latitude,
-                        lng: locations[0].longitude,
-                    },
-                    zoom: 14,
-                    mapTypeControl: false,
-                    streetViewControl: false,
-                    fullscreenControl: false,
-                });
+                const map = L.map(mapEl.current, {
+                    scrollWheelZoom: false,
+                }).setView([locations[0].latitude, locations[0].longitude], 14);
                 mapRef.current = map;
-                infoRef.current = new g.maps.InfoWindow();
 
-                const bounds = new g.maps.LatLngBounds();
+                L.tileLayer(
+                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    {
+                        attribution: '&copy; OpenStreetMap',
+                        maxZoom: 19,
+                    },
+                ).addTo(map);
+
                 markersRef.current = locations.map((loc, i) => {
-                    const position = { lat: loc.latitude, lng: loc.longitude };
-                    bounds.extend(position);
-                    const marker = new g.maps.Marker({
-                        position,
-                        map,
-                        title: loc.name,
-                    });
-                    marker.addListener('click', () => focusMarker(i));
+                    const marker = L.marker([loc.latitude, loc.longitude], {
+                        icon: numberedIcon(L, i + 1),
+                    })
+                        .addTo(map)
+                        .bindPopup(
+                            `<strong>${loc.name}</strong><br/><span style="color:#475569">${typeLabel(loc.type)}</span><br/>${loc.address ?? ''}`,
+                        );
+                    marker.on('click', () => setActive(i));
                     return marker;
                 });
 
                 if (locations.length > 1) {
-                    map.fitBounds(bounds, 48);
+                    map.fitBounds(
+                        L.latLngBounds(
+                            locations.map((l) => [l.latitude, l.longitude]),
+                        ).pad(0.25),
+                    );
                 } else {
                     map.setZoom(15);
                 }
@@ -105,6 +124,10 @@ export default function ShelterMap({
 
         return () => {
             cancelled = true;
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [locations]);
@@ -113,30 +136,21 @@ export default function ShelterMap({
         setActive(i);
         const loc = locations[i];
         const marker = markersRef.current[i];
-        if (!mapRef.current || !marker || !infoRef.current) return;
-
-        infoRef.current.setContent(
-            `<div style="font-family:system-ui;font-size:13px;max-width:220px">
-                <strong>${loc.name}</strong><br/>
-                <span style="color:#475569">${typeLabel(loc.type)}</span><br/>
-                ${loc.address ?? ''}
-            </div>`,
-        );
-        infoRef.current.open(mapRef.current, marker);
-        mapRef.current.panTo({ lat: loc.latitude, lng: loc.longitude });
+        if (!mapRef.current || !marker) return;
+        mapRef.current.setView([loc.latitude, loc.longitude], 16);
+        marker.openPopup();
     };
 
     return (
         <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
-            {status !== 'nokey' && status !== 'error' && (
+            {status !== 'error' && (
                 <div ref={mapEl} className="h-56 w-full bg-slate-100" />
             )}
 
-            {(status === 'nokey' || status === 'error') && (
+            {status === 'error' && (
                 <div className="flex h-20 items-center justify-center bg-slate-50 px-4 text-center text-xs text-slate-500">
-                    {status === 'nokey'
-                        ? 'Peta interaktif nonaktif (VITE_GOOGLE_MAPS_API_KEY belum diset). Koordinat tetap dapat dibuka di Google Maps di bawah.'
-                        : 'Gagal memuat peta. Koordinat tetap dapat dibuka di Google Maps di bawah.'}
+                    Gagal memuat peta. Koordinat tetap dapat dibuka di Google
+                    Maps di bawah.
                 </div>
             )}
 
