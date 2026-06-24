@@ -37,6 +37,7 @@ class MessageController extends Controller
                 'last_intent' => $data['intent'],
                 'last_confidence_pct' => (int) round($data['confidence'] * 100),
             ]);
+            $this->logIntent($session, $validated['content'], $data);
 
             return response()->json($data, 201);
         } catch (Throwable $e) {
@@ -123,6 +124,7 @@ class MessageController extends Controller
                     'last_intent' => $data['intent'],
                     'last_confidence_pct' => (int) round($data['confidence'] * 100),
                 ]);
+                $this->logIntent($session, $content, $data);
 
                 $this->sse(['type' => 'done', ...$data]);
             } catch (Throwable $e) {
@@ -151,19 +153,49 @@ class MessageController extends Controller
     /**
      * Map a tool name to a friendly Indonesian status label. Matches loosely
      * since the SDK may surface either the snake_case name or the class
-     * basename (e.g. "search_knowledge_base" or "SearchKnowledgeBaseTool").
+     * basename (e.g. "find_shelter_locations" or "FindShelterLocationsTool").
      */
     private function toolStatus(string $name): string
     {
         $key = strtolower($name);
 
         return match (true) {
-            str_contains($key, 'search') => 'Mencari di knowledge base…',
-            str_contains($key, 'classify') || str_contains($key, 'intent') => 'Memahami kebutuhan…',
-            str_contains($key, 'fresh') => 'Memeriksa keterkinian data…',
-            str_contains($key, 'escalation') || str_contains($key, 'contact') => 'Menyiapkan kontak petugas…',
+            str_contains($key, 'disaster') => 'Mencari informasi bencana…',
+            str_contains($key, 'verify') || str_contains($key, 'claim') => 'Memverifikasi klaim ke sumber resmi…',
+            str_contains($key, 'shelter') => 'Mencari lokasi posko…',
+            str_contains($key, 'aid') => 'Mencari program bantuan…',
             default => 'Memproses…',
         };
+    }
+
+    /**
+     * Map the model's detected intent to the category tool that handles it.
+     */
+    private const INTENT_TOOL = [
+        'disaster_info' => 'search_disaster_info',
+        'claim_verification' => 'verify_claim',
+        'shelter_location' => 'find_shelter_locations',
+        'aid_assistance' => 'get_aid_assistance_info',
+    ];
+
+    /**
+     * Persist the detected intent for analytics. The intent comes from the
+     * model's own classification in the response metadata; out-of-scope and
+     * error replies are logged with a null tool.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function logIntent(ChatSession $session, string $userMessage, array $data): void
+    {
+        $intent = $data['intent'] ?? 'out_of_scope';
+
+        $session->intentLogs()->create([
+            'conversation_id' => $session->conversation_id,
+            'user_message' => $userMessage,
+            'detected_intent' => $intent,
+            'tool_called' => self::INTENT_TOOL[$intent] ?? null,
+            'confidence' => $data['confidence'] ?? null,
+        ]);
     }
 
     /**

@@ -5,15 +5,19 @@ import SourceCard from '@/components/SourceCard';
 import type { ChatMessage } from '@/hooks/useChat';
 
 const INTENT_LABELS: Record<string, string> = {
-    navigasi: 'Navigasi bantuan',
-    verifikasi: 'Verifikasi informasi',
-    unclear: 'Butuh klarifikasi',
+    disaster_info: 'Informasi bencana',
+    claim_verification: 'Verifikasi klaim',
+    shelter_location: 'Lokasi posko',
+    aid_assistance: 'Bantuan sosial',
+    out_of_scope: 'Di luar topik',
 };
 
 const INTENT_DOTS: Record<string, string> = {
-    navigasi: 'bg-blue-500',
-    verifikasi: 'bg-violet-500',
-    unclear: 'bg-amber-500',
+    disaster_info: 'bg-blue-500',
+    claim_verification: 'bg-violet-500',
+    shelter_location: 'bg-emerald-500',
+    aid_assistance: 'bg-amber-500',
+    out_of_scope: 'bg-slate-400',
 };
 
 function UserGlyph() {
