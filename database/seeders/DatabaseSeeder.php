@@ -21,5 +21,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(KnowledgeSeeder::class);
+        $this->call(DatasetSeeder::class);
     }
 }
