@@ -3,6 +3,7 @@
 namespace App\Ai\Tools;
 
 use App\Ai\Support\ToolReferences;
+use App\Ai\Support\WebResearch;
 use App\Models\AidProgram;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
@@ -10,6 +11,8 @@ use Laravel\Ai\Tools\Request;
 
 class GetAidAssistanceInfoTool implements Tool
 {
+    public function __construct(private readonly WebResearch $web) {}
+
     public function name(): string
     {
         return 'get_aid_assistance_info';
@@ -48,7 +51,13 @@ class GetAidAssistanceInfoTool implements Tool
             ])
             ->all();
 
-        if (empty($programs)) {
+        // Live web research for current aid/bansos programs in the region.
+        $scope = $region ?? 'wilayah terdampak bencana';
+        $webResearch = $this->web->research(
+            "Program bantuan sosial/bansos atau bantuan bencana terkini untuk {$scope} di Indonesia. Sebutkan penyedia (Kemensos/BNPB/pemda), jenis bantuan, sumber resmi, dan tanggal.",
+        );
+
+        if (empty($programs) && $webResearch === null) {
             return json_encode([
                 'found' => false,
                 'message' => 'Belum ada data program bantuan resmi yang relevan di basis data Cekarah. Sarankan user '
@@ -57,9 +66,10 @@ class GetAidAssistanceInfoTool implements Tool
         }
 
         return json_encode([
-            'found' => true,
+            'found' => ! empty($programs),
             'count' => count($programs),
             'programs' => $programs,
+            'web_research' => $webResearch,
         ], JSON_UNESCAPED_UNICODE);
     }
 

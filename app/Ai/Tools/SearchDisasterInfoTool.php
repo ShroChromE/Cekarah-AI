@@ -3,6 +3,7 @@
 namespace App\Ai\Tools;
 
 use App\Ai\Support\ToolReferences;
+use App\Ai\Support\WebResearch;
 use App\Models\DisasterEvent;
 use App\Services\KnowledgeIndexer;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -11,7 +12,10 @@ use Laravel\Ai\Tools\Request;
 
 class SearchDisasterInfoTool implements Tool
 {
-    public function __construct(private readonly KnowledgeIndexer $indexer) {}
+    public function __construct(
+        private readonly KnowledgeIndexer $indexer,
+        private readonly WebResearch $web,
+    ) {}
 
     public function name(): string
     {
@@ -55,7 +59,12 @@ class SearchDisasterInfoTool implements Tool
         // Supplement with the general knowledge base (procedural / contextual info).
         $chunks = $this->indexer->similarChunks($query, 4);
 
-        if (empty($events) && empty($chunks)) {
+        // Live web research from official sources (null on overload/timeout).
+        $webResearch = $this->web->research(
+            "Informasi bencana terkini di Indonesia terkait: {$query}. Sebutkan sumber resmi dan tanggal.",
+        );
+
+        if (empty($events) && empty($chunks) && $webResearch === null) {
             return json_encode([
                 'found' => false,
                 'message' => 'Belum ada data resmi bencana yang relevan di basis data Cekarah. Arahkan user ke sumber resmi: bnpb.go.id atau BPBD setempat.',
@@ -71,6 +80,7 @@ class SearchDisasterInfoTool implements Tool
                 'source_url' => $c['source_url'],
                 'is_stale' => $c['is_stale'],
             ], $chunks),
+            'web_research' => $webResearch,
             'references' => ToolReferences::fromChunks($chunks),
         ], JSON_UNESCAPED_UNICODE);
     }

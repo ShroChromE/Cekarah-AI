@@ -3,6 +3,7 @@
 namespace App\Ai\Tools;
 
 use App\Ai\Support\ToolReferences;
+use App\Ai\Support\WebResearch;
 use App\Models\ShelterLocation;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
@@ -10,6 +11,8 @@ use Laravel\Ai\Tools\Request;
 
 class FindShelterLocationsTool implements Tool
 {
+    public function __construct(private readonly WebResearch $web) {}
+
     public function name(): string
     {
         return 'find_shelter_locations';
@@ -52,7 +55,12 @@ class FindShelterLocationsTool implements Tool
             ])
             ->all();
 
-        if (empty($locations)) {
+        // Live web context (coordinates for the map still come only from the DB).
+        $webResearch = $this->web->research(
+            "Informasi posko pengungsian, shelter, atau dapur umum terkini untuk wilayah {$region} akibat bencana. Sebutkan sumber resmi (BPBD/BNPB) dan tanggal.",
+        );
+
+        if (empty($locations) && $webResearch === null) {
             return json_encode([
                 'found' => false,
                 'message' => "Belum ada data posko/shelter resmi untuk wilayah \"{$region}\" di basis data Cekarah. "
@@ -61,9 +69,10 @@ class FindShelterLocationsTool implements Tool
         }
 
         return json_encode([
-            'found' => true,
+            'found' => ! empty($locations),
             'count' => count($locations),
             'locations' => $locations,
+            'web_research' => $webResearch,
         ], JSON_UNESCAPED_UNICODE);
     }
 

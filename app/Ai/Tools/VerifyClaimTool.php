@@ -3,6 +3,7 @@
 namespace App\Ai\Tools;
 
 use App\Ai\Support\ToolReferences;
+use App\Ai\Support\WebResearch;
 use App\Models\ClaimVerification;
 use App\Services\KnowledgeIndexer;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -11,7 +12,10 @@ use Laravel\Ai\Tools\Request;
 
 class VerifyClaimTool implements Tool
 {
-    public function __construct(private readonly KnowledgeIndexer $indexer) {}
+    public function __construct(
+        private readonly KnowledgeIndexer $indexer,
+        private readonly WebResearch $web,
+    ) {}
 
     public function name(): string
     {
@@ -47,7 +51,12 @@ class VerifyClaimTool implements Tool
         // Supplement with knowledge base hoax-pattern / official-channel docs.
         $chunks = $this->indexer->similarChunks($claim, 4);
 
-        if (empty($records) && empty($chunks)) {
+        // Live web cross-check against fact-checkers and official channels.
+        $webResearch = $this->web->research(
+            "Verifikasi kebenaran klaim/kabar berikut dengan sumber terkini (BMKG, BNPB, MAFINDO/turnbackhoax, media kredibel): \"{$claim}\". Apakah benar, belum terverifikasi, atau hoaks? Sebutkan sumber dan tanggal.",
+        );
+
+        if (empty($records) && empty($chunks) && $webResearch === null) {
             return json_encode([
                 'status' => 'no_official_data',
                 'message' => 'Belum ada data resmi untuk memverifikasi klaim ini. Sarankan user mengecek langsung ke '
@@ -63,9 +72,10 @@ class VerifyClaimTool implements Tool
                 'source_url' => $c['source_url'],
                 'is_stale' => $c['is_stale'],
             ], $chunks),
+            'web_research' => $webResearch,
             'references' => ToolReferences::fromChunks($chunks),
-            'guidance' => 'Tentukan status berdasarkan rujukan di atas. Jika tidak ada rujukan resmi yang mendukung, '
-                .'gunakan status no_official_data dan jelaskan ciri-ciri pola hoaks bila relevan.',
+            'guidance' => 'Tentukan status berdasarkan rujukan di atas (termasuk web_research bila ada). Jika tidak ada '
+                .'rujukan resmi yang mendukung, gunakan status no_official_data dan jelaskan ciri-ciri pola hoaks bila relevan.',
         ], JSON_UNESCAPED_UNICODE);
     }
 

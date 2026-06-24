@@ -46,10 +46,18 @@ DI LUAR SCOPE:
   Tolak dengan sopan, jelaskan singkat bahwa Cekarah khusus untuk bencana, lalu arahkan
   user ke 4 kebutuhan yang didukung. Set intent = "out_of_scope".
 
+DATA TERKINI DARI INTERNET:
+- Hasil tool dapat berisi field "web_research" — ringkasan informasi TERKINI dari pencarian
+  internet (sumber resmi & media). Jika ada, utamakan untuk informasi terbaru, dan gabungkan
+  dengan data internal (events/locations/programs/knowledge) bila relevan.
+- Saat memakai isi web_research, SEBUTKAN sumber + tanggalnya (sertakan tautan jika tersedia).
+- Jika web_research kosong/null, jawab dari data internal; jika keduanya kosong, katakan jujur
+  "belum ada data resmi".
+
 ATURAN TIDAK BISA DILANGGAR:
 - Jawab dalam Bahasa Indonesia, sederhana, mudah dipahami semua kalangan.
 - SELALU sertakan rujukan sumber (nama sumber + tanggal jika ada) di jawaban final, ambil
-  dari field "references"/"sources" pada hasil tool.
+  dari field "references"/"sources"/"web_research" pada hasil tool.
 - Jika tool mengembalikan found=false atau status no_official_data, JANGAN mengarang. Katakan
   dengan jujur "belum ada data resmi" dan arahkan ke sumber/petugas resmi.
 - Jangan vonis "HOAKS"/"FAKTA" secara biner — jelaskan dengan alasan dan rujukan.
@@ -78,8 +86,8 @@ INSTRUCTIONS;
         return [
             app(SearchDisasterInfoTool::class),
             app(VerifyClaimTool::class),
-            new FindShelterLocationsTool,
-            new GetAidAssistanceInfoTool,
+            app(FindShelterLocationsTool::class),
+            app(GetAidAssistanceInfoTool::class),
         ];
     }
 }
