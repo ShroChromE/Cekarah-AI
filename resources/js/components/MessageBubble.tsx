@@ -1,6 +1,8 @@
 import BrandMark from '@/components/BrandMark';
 import ConfidenceBar from '@/components/ConfidenceBar';
 import EscalationPanel from '@/components/EscalationPanel';
+import ReferenceList from '@/components/ReferenceList';
+import ShelterMap from '@/components/ShelterMap';
 import SourceCard from '@/components/SourceCard';
 import type { ChatMessage } from '@/hooks/useChat';
 
@@ -59,6 +61,8 @@ export default function MessageBubble(msg: ChatMessage) {
         escalation_suggested,
         escalation_contacts,
         sources_used,
+        references,
+        locations,
         isStreaming,
         status,
     } = msg;
@@ -67,6 +71,13 @@ export default function MessageBubble(msg: ChatMessage) {
         (escalation_suggested ||
             (typeof confidence === 'number' && confidence < 0.6)) &&
         escalation_contacts?.length > 0;
+    const hasReferences = !!references && references.length > 0;
+    const hasMeta =
+        intent ||
+        typeof confidence === 'number' ||
+        hasReferences ||
+        sources_used?.length > 0 ||
+        showEscalation;
 
     // Still thinking: a tool is running and no reply text has arrived yet.
     if (isStreaming && reply.length === 0) {
@@ -115,43 +126,46 @@ export default function MessageBubble(msg: ChatMessage) {
                     )}
                 </div>
 
-                {!isStreaming &&
-                    !isError &&
-                    (intent ||
-                        typeof confidence === 'number' ||
-                        sources_used?.length > 0 ||
-                        showEscalation) && (
-                        <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
-                            {intent && INTENT_LABELS[intent] && (
-                                <div className="flex items-center gap-2">
-                                    <span
-                                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${INTENT_DOTS[intent] ?? 'bg-slate-400'}`}
-                                    />
-                                    <span className="text-xs text-slate-400">
-                                        {INTENT_LABELS[intent]}
-                                    </span>
-                                </div>
-                            )}
+                {!isStreaming && locations && locations.length > 0 && (
+                    <ShelterMap locations={locations} />
+                )}
 
-                            {typeof confidence === 'number' && (
-                                <ConfidenceBar confidence={confidence} />
-                            )}
+                {!isStreaming && !isError && hasMeta && (
+                    <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
+                        {intent && INTENT_LABELS[intent] && (
+                            <div className="flex items-center gap-2">
+                                <span
+                                    className={`h-1.5 w-1.5 shrink-0 rounded-full ${INTENT_DOTS[intent] ?? 'bg-slate-400'}`}
+                                />
+                                <span className="text-xs text-slate-400">
+                                    {INTENT_LABELS[intent]}
+                                </span>
+                            </div>
+                        )}
 
-                            {sources_used?.length > 0 && (
+                        {typeof confidence === 'number' && (
+                            <ConfidenceBar confidence={confidence} />
+                        )}
+
+                        {/* Prefer authoritative references (with clickable URLs); fall
+                            back to the model's source list when none were captured. */}
+                        {hasReferences ? (
+                            <ReferenceList references={references} />
+                        ) : (
+                            sources_used?.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 pt-1">
                                     {sources_used.map((s, i) => (
                                         <SourceCard key={i} source={s} />
                                     ))}
                                 </div>
-                            )}
+                            )
+                        )}
 
-                            {showEscalation && (
-                                <EscalationPanel
-                                    contacts={escalation_contacts}
-                                />
-                            )}
-                        </div>
-                    )}
+                        {showEscalation && (
+                            <EscalationPanel contacts={escalation_contacts} />
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );

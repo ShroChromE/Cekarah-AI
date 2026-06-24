@@ -12,6 +12,24 @@ export type Source = {
     is_stale: boolean;
 };
 
+export type Reference = {
+    name: string;
+    url: string | null;
+    date: string | null;
+};
+
+export type MapLocation = {
+    name: string;
+    type: string | null;
+    address: string | null;
+    latitude: number;
+    longitude: number;
+    capacity: number | null;
+    occupancy: number | null;
+    contact: string | null;
+    notes: string | null;
+};
+
 export type UserMessage = {
     role: 'user';
     content: string;
@@ -25,6 +43,8 @@ export type AssistantMessage = {
     escalation_suggested: boolean;
     escalation_contacts: EscalationContact[];
     sources_used: Source[];
+    references?: Reference[];
+    locations?: MapLocation[];
     isStreaming?: boolean;
     status?: string;
 };
@@ -155,6 +175,8 @@ export function useChat() {
                                 (evt.escalation_contacts as EscalationContact[]) ??
                                 [],
                             sources_used: (evt.sources_used as Source[]) ?? [],
+                            references: (evt.references as Reference[]) ?? [],
+                            locations: (evt.locations as MapLocation[]) ?? [],
                             isStreaming: false,
                             status: undefined,
                         });

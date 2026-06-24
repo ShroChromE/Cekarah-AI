@@ -15,6 +15,7 @@ use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Responses\StreamedAgentResponse;
 use Laravel\Ai\Streaming\Events\TextDelta;
 use Laravel\Ai\Streaming\Events\ToolCall;
+use Laravel\Ai\Streaming\Events\ToolResult;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -70,6 +71,8 @@ class MessageController extends Controller
             $buffer = '';
             $emitted = 0;
             $metaReached = false;
+            $locations = [];
+            $references = [];
 
             try {
                 $stream = $this->agentForSession($session)->stream($content);
@@ -86,6 +89,14 @@ class MessageController extends Controller
                             'type' => 'status',
                             'message' => $this->toolStatus($event->toolCall->name),
                         ]);
+
+                        continue;
+                    }
+
+                    if ($event instanceof ToolResult) {
+                        // Capture authoritative structured data straight from the
+                        // tool output (coordinates and sources, not via the model).
+                        $this->collectToolData($event->toolResult->name, $event->toolResult->result, $locations, $references);
 
                         continue;
                     }
@@ -126,7 +137,12 @@ class MessageController extends Controller
                 ]);
                 $this->logIntent($session, $content, $data);
 
-                $this->sse(['type' => 'done', ...$data]);
+                $this->sse([
+                    'type' => 'done',
+                    ...$data,
+                    'locations' => $locations,
+                    'references' => array_values($references),
+                ]);
             } catch (Throwable $e) {
                 Log::error('cekarah.stream.error', ['token' => $session->token, 'error' => $e->getMessage()]);
                 $this->sse(['type' => 'error', ...$this->errorPayload($e)]);
@@ -177,6 +193,69 @@ class MessageController extends Controller
         'shelter_location' => 'find_shelter_locations',
         'aid_assistance' => 'get_aid_assistance_info',
     ];
+
+    /**
+     * Extract structured data from a tool result: shelter locations (for the
+     * map) and any citations (for clickable source links). Coordinates and
+     * URLs come straight from the tool/DB, never from the model's text.
+     *
+     * @param  array<int, mixed>  $locations
+     * @param  array<string, array{name: string, url: string|null, date: string|null}>  $references
+     */
+    private function collectToolData(string $name, mixed $result, array &$locations, array &$references): void
+    {
+        $decoded = is_string($result) ? json_decode($result, true) : $result;
+
+        if (! is_array($decoded)) {
+            return;
+        }
+
+        if (str_contains(strtolower($name), 'shelter') && ! empty($decoded['locations'])) {
+            foreach ($decoded['locations'] as $loc) {
+                if (isset($loc['latitude'], $loc['longitude'])) {
+                    $locations[] = [
+                        'name' => $loc['name'] ?? 'Lokasi',
+                        'type' => $loc['type'] ?? null,
+                        'address' => $loc['address'] ?? null,
+                        'latitude' => (float) $loc['latitude'],
+                        'longitude' => (float) $loc['longitude'],
+                        'capacity' => $loc['capacity'] ?? null,
+                        'occupancy' => $loc['occupancy'] ?? null,
+                        'contact' => $loc['contact'] ?? null,
+                        'notes' => $loc['notes'] ?? null,
+                    ];
+                }
+            }
+        }
+
+        $this->collectReferences($decoded, $references);
+    }
+
+    /**
+     * Recursively gather every "references" entry in a tool result, de-duped.
+     *
+     * @param  array<mixed, mixed>  $node
+     * @param  array<string, array{name: string, url: string|null, date: string|null}>  $references
+     */
+    private function collectReferences(array $node, array &$references): void
+    {
+        foreach ($node as $key => $value) {
+            if ($key === 'references' && is_array($value)) {
+                foreach ($value as $ref) {
+                    if (is_array($ref) && ! empty($ref['name'])) {
+                        $signature = $ref['name'].'|'.($ref['url'] ?? '');
+                        $references[$signature] = [
+                            'name' => $ref['name'],
+                            'url' => $ref['url'] ?? null,
+                            'date' => $ref['date'] ?? null,
+                        ];
+                    }
+                }
+            } elseif (is_array($value)) {
+                $this->collectReferences($value, $references);
+            }
+        }
+    }
 
     /**
      * Persist the detected intent for analytics. The intent comes from the
