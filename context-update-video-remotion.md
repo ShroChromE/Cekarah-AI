@@ -24,7 +24,7 @@ Berdasarkan fitur yang **kini benar-benar berfungsi** (Fase 1–5):
 
 1. **Streaming chat** — jawaban muncul bertahap (efek mengetik) + indikator status ("Mencari di knowledge base…", "Mencari lokasi posko…"). Memberi kesan responsif & hidup; bagus untuk B-roll layar.
 2. **Routing intent otomatis** — sistem memilih sendiri kategori yang tepat tanpa user memilih menu. Layak ditonjolkan: satu kotak chat, lima perilaku berbeda.
-3. **Peta posko interaktif** — marker + daftar lokasi yang bisa diklik untuk fokus ke marker (Google Maps). Visual paling "wah" untuk demo.
+3. **Peta posko interaktif** — marker + daftar lokasi yang bisa diklik untuk fokus ke marker (Leaflet). Visual paling "wah" untuk demo.
 4. **Sumber yang bisa diklik** — tiap jawaban menampilkan rujukan resmi (BNPB/BMKG/dll) sebagai tautan. Memperkuat pesan Responsible AI/anti-hoaks.
 5. **Penolakan di luar konteks** — sistem menolak sopan pertanyaan non-bencana. Bagus untuk menegaskan fokus & keamanan.
 6. **Transparansi & grounding** — badge keyakinan, "belum ada data resmi" alih-alih mengarang, penanda data sintetis. Untuk segmen Responsible AI.

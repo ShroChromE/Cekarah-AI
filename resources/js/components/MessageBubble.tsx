@@ -1,6 +1,7 @@
 import BrandMark from '@/components/BrandMark';
 import ConfidenceBar from '@/components/ConfidenceBar';
 import EscalationPanel from '@/components/EscalationPanel';
+import FormattedText from '@/components/FormattedText';
 import ReferenceList from '@/components/ReferenceList';
 import ShelterMap from '@/components/ShelterMap';
 import SourceCard from '@/components/SourceCard';
@@ -120,7 +121,7 @@ export default function MessageBubble(msg: ChatMessage) {
                 </p>
 
                 <div className="text-sm leading-relaxed whitespace-pre-wrap text-slate-800">
-                    {reply}
+                    <FormattedText text={reply} />
                     {isStreaming && (
                         <span className="animate-blink ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 bg-slate-400" />
                     )}
