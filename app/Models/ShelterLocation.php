@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasCitations;
+use App\Models\Concerns\TracksCuration;
 use Database\Factories\ShelterLocationFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,9 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ShelterLocation extends Model
 {
     /** @use HasFactory<ShelterLocationFactory> */
-    use HasCitations, HasFactory;
+    use HasCitations, HasFactory, TracksCuration;
 
     protected $fillable = [
+        'created_by',
+        'updated_by',
         'disaster_event_id',
         'name',
         'type',

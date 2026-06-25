@@ -73,6 +73,7 @@ class MessageController extends Controller
             $metaReached = false;
             $locations = [];
             $references = [];
+            $needsReview = false;
 
             try {
                 $stream = $this->agentForSession($session)->stream($content);
@@ -96,7 +97,17 @@ class MessageController extends Controller
                     if ($event instanceof ToolResult) {
                         // Capture authoritative structured data straight from the
                         // tool output (coordinates and sources, not via the model).
-                        $this->collectToolData($event->toolResult->name, $event->toolResult->result, $locations, $references);
+                        $decoded = is_string($event->toolResult->result)
+                            ? json_decode($event->toolResult->result, true)
+                            : $event->toolResult->result;
+
+                        if (is_array($decoded)) {
+                            $this->collectToolData($event->toolResult->name, $decoded, $locations, $references);
+
+                            if ($this->toolFoundNothing($decoded)) {
+                                $needsReview = true;
+                            }
+                        }
 
                         continue;
                     }
@@ -135,7 +146,7 @@ class MessageController extends Controller
                     'last_intent' => $data['intent'],
                     'last_confidence_pct' => (int) round($data['confidence'] * 100),
                 ]);
-                $this->logIntent($session, $content, $data);
+                $this->logIntent($session, $content, $data, $needsReview);
 
                 $this->sse([
                     'type' => 'done',
@@ -199,17 +210,12 @@ class MessageController extends Controller
      * map) and any citations (for clickable source links). Coordinates and
      * URLs come straight from the tool/DB, never from the model's text.
      *
+     * @param  array<mixed, mixed>  $decoded
      * @param  array<int, mixed>  $locations
      * @param  array<string, array{name: string, url: string|null, date: string|null}>  $references
      */
-    private function collectToolData(string $name, mixed $result, array &$locations, array &$references): void
+    private function collectToolData(string $name, array $decoded, array &$locations, array &$references): void
     {
-        $decoded = is_string($result) ? json_decode($result, true) : $result;
-
-        if (! is_array($decoded)) {
-            return;
-        }
-
         if (str_contains(strtolower($name), 'shelter') && ! empty($decoded['locations'])) {
             foreach ($decoded['locations'] as $loc) {
                 if (isset($loc['latitude'], $loc['longitude'])) {
@@ -229,6 +235,20 @@ class MessageController extends Controller
         }
 
         $this->collectReferences($decoded, $references);
+    }
+
+    /**
+     * Determine whether a tool returned a total fallback (no DB data and no web
+     * research) — used to flag the message for the volunteer review queue.
+     *
+     * @param  array<mixed, mixed>  $decoded
+     */
+    private function toolFoundNothing(array $decoded): bool
+    {
+        $emptyResult = (($decoded['found'] ?? null) === false)
+            || (($decoded['status'] ?? null) === 'no_official_data');
+
+        return $emptyResult && empty($decoded['web_research']);
     }
 
     /**
@@ -264,7 +284,7 @@ class MessageController extends Controller
      *
      * @param  array<string, mixed>  $data
      */
-    private function logIntent(ChatSession $session, string $userMessage, array $data): void
+    private function logIntent(ChatSession $session, string $userMessage, array $data, bool $needsReview = false): void
     {
         $intent = $data['intent'] ?? 'out_of_scope';
 
@@ -273,6 +293,7 @@ class MessageController extends Controller
             'user_message' => $userMessage,
             'detected_intent' => $intent,
             'tool_called' => self::INTENT_TOOL[$intent] ?? null,
+            'needs_review' => $needsReview,
             'confidence' => $data['confidence'] ?? null,
         ]);
     }

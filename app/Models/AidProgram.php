@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasCitations;
+use App\Models\Concerns\TracksCuration;
 use Database\Factories\AidProgramFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,9 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AidProgram extends Model
 {
     /** @use HasFactory<AidProgramFactory> */
-    use HasCitations, HasFactory;
+    use HasCitations, HasFactory, TracksCuration;
 
     protected $fillable = [
+        'created_by',
+        'updated_by',
         'disaster_event_id',
         'name',
         'provider',

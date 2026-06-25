@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasCitations;
+use App\Models\Concerns\TracksCuration;
 use Database\Factories\ClaimVerificationFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,9 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ClaimVerification extends Model
 {
     /** @use HasFactory<ClaimVerificationFactory> */
-    use HasCitations, HasFactory;
+    use HasCitations, HasFactory, TracksCuration;
 
     protected $fillable = [
+        'created_by',
+        'updated_by',
         'disaster_event_id',
         'claim_text',
         'status',

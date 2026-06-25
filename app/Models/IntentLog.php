@@ -13,10 +13,12 @@ class IntentLog extends Model
         'user_message',
         'detected_intent',
         'tool_called',
+        'needs_review',
         'confidence',
     ];
 
     protected $casts = [
+        'needs_review' => 'boolean',
         'confidence' => 'float',
     ];
 
