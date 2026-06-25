@@ -20,9 +20,10 @@ class FindShelterLocationsTool implements Tool
 
     public function description(): string
     {
-        return 'Cari lokasi posko pengungsian, shelter, dapur umum, atau pos kesehatan di suatu wilayah '
-            .'(mis. "posko pengungsian di Binjai di mana?"). Mengembalikan daftar lokasi lengkap dengan '
-            .'alamat, koordinat (latitude/longitude), kapasitas, dan sumber — untuk ditampilkan di peta.';
+        return 'Cari lokasi posko pengungsian, pos lapangan, atau pos koordinasi/komando bencana di suatu wilayah '
+            .'(mis. "posko pengungsian di Aceh Tamiang di mana?"). Mengembalikan daftar lokasi lengkap dengan '
+            .'alamat, koordinat (latitude/longitude), kapasitas, dan sumber — untuk ditampilkan di peta. '
+            .'Biarkan parameter "type" KOSONG kecuali user secara eksplisit meminta jenis pos tertentu.';
     }
 
     public function handle(Request $request): string
@@ -80,7 +81,7 @@ class FindShelterLocationsTool implements Tool
     {
         return [
             'region' => $schema->string()->required(),
-            'type' => $schema->string()->enum(['evacuation_shelter', 'public_kitchen', 'health_post', 'logistics_post']),
+            'type' => $schema->string()->enum(['evacuation_post', 'field_post', 'command_post', 'national_liaison_post']),
         ];
     }
 }

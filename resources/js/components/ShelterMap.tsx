@@ -10,6 +10,11 @@ declare global {
 }
 
 const TYPE_LABELS: Record<string, string> = {
+    evacuation_post: 'Posko Pengungsian',
+    field_post: 'Pos Lapangan',
+    command_post: 'Pos Koordinasi/Komando',
+    national_liaison_post: 'Pos Penghubung Nasional',
+    // Legacy labels kept for backward compatibility.
     evacuation_shelter: 'Posko Pengungsian',
     public_kitchen: 'Dapur Umum',
     health_post: 'Pos Kesehatan',
