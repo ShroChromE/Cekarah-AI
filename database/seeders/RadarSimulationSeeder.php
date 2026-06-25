@@ -68,21 +68,21 @@ class RadarSimulationSeeder extends Seeder
      */
     private const REGION_NEEDS = [
         [
-            'region_phrase' => 'Binjai',
+            'region_phrase' => 'Aceh Tamiang',
             'intent' => 'shelter_location',
-            'variants' => ['Posko pengungsian di Binjai di mana?', 'Tempat mengungsi terdekat Binjai?', 'Lokasi posko banjir Binjai?'],
+            'variants' => ['Posko pengungsian di Aceh Tamiang di mana?', 'Tempat mengungsi terdekat Aceh Tamiang?', 'Lokasi posko banjir Aceh Tamiang?'],
             'curve' => [0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 5, 5, 6, 7],
         ],
         [
-            'region_phrase' => 'Binjai',
+            'region_phrase' => 'Aceh Tamiang',
             'intent' => 'aid_assistance',
-            'variants' => ['Bantuan sosial untuk korban banjir Binjai apa saja?', 'Ada bansos di Binjai tidak?'],
+            'variants' => ['Bantuan sosial untuk korban banjir Aceh Tamiang apa saja?', 'Ada bansos di Aceh Tamiang tidak?'],
             'curve' => [0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 5, 5],
         ],
         [
-            'region_phrase' => 'Medan',
+            'region_phrase' => 'Padang Panjang',
             'intent' => 'shelter_location',
-            'variants' => ['Posko pengungsian di Medan?', 'Tempat evakuasi terdekat Medan?'],
+            'variants' => ['Posko pengungsian di Padang Panjang?', 'Tempat evakuasi terdekat Padang Panjang?'],
             'curve' => [1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
         ],
         [
@@ -92,9 +92,9 @@ class RadarSimulationSeeder extends Seeder
             'curve' => [0, 0, 0, 1, 0, 1, 1, 1, 2, 2, 2, 3, 3, 4],
         ],
         [
-            'region_phrase' => 'Langkat',
+            'region_phrase' => 'Agam',
             'intent' => 'shelter_location',
-            'variants' => ['Posko di Langkat ada di mana?', 'Lokasi pengungsian Langkat?'],
+            'variants' => ['Posko di Agam ada di mana?', 'Lokasi pengungsian Agam?'],
             'curve' => [0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 2, 2, 2, 3],
         ],
     ];

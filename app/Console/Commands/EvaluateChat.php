@@ -148,7 +148,7 @@ class EvaluateChat extends Command
 
         $reply = $data['reply'] ?? '';
 
-        return (bool) preg_match('/https?:\/\/|\bsumber\b|BMKG|BNPB|BPBD|Kemensos|Basarnas|MAFINDO|PMI|Kemkomdigi/i', $reply);
+        return (bool) preg_match('/https?:\/\/|\bsumber\b|BMKG|BNPB|BPBD|Kemensos|Basarnas|MAFINDO|PMI|Komdigi|Kemkomdigi|Kemendagri|Kemenko\s?PMK|Kemenkopmk/i', $reply);
     }
 
     /**

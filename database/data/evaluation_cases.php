@@ -3,53 +3,54 @@
 /**
  * Ground-truth evaluation set for `php artisan cekarah:evaluate`.
  *
- * Each case: question + expected intent category. Claim cases also carry an
- * expected verification status. Citations are expected for every in-scope
- * category (1-4) and never for out-of-scope (5).
+ * Each case: question + expected intent category. Claim cases carry an expected
+ * verification status ONLY when the claim exists in the seeded dataset; open
+ * claims are left status-less (scored on intent + citation only). Aligned to the
+ * real Sumatera 2025–2026 dataset (Aceh/Sumut/Sumbar) — no longer Binjai.
  *
  * Intent categories: disaster_info | claim_verification | shelter_location
  *                    | aid_assistance | out_of_scope
  */
 return [
     // 1. INFORMASI BENCANA --------------------------------------------------
-    ['q' => 'Banjir sedang terjadi di mana saja?', 'intent' => 'disaster_info'],
+    ['q' => 'Banjir dan longsor sedang terjadi di mana saja di Sumatera?', 'intent' => 'disaster_info'],
     ['q' => 'Bagaimana situasi banjir di Sumatera Utara saat ini?', 'intent' => 'disaster_info'],
-    ['q' => 'Apakah ada bencana banjir di Binjai?', 'intent' => 'disaster_info'],
-    ['q' => 'Wilayah mana saja yang terdampak banjir di Sumatera?', 'intent' => 'disaster_info'],
-    ['q' => 'Apa status tanggap darurat bencana di Langkat?', 'intent' => 'disaster_info'],
-    ['q' => 'Adakah informasi gempa terbaru di Indonesia?', 'intent' => 'disaster_info'],
-    ['q' => 'Bagaimana kondisi terkini bencana di Tapanuli Selatan?', 'intent' => 'disaster_info'],
-    ['q' => 'Berikan informasi cuaca ekstrem terbaru dari BMKG', 'intent' => 'disaster_info'],
+    ['q' => 'Bagaimana kondisi bencana banjir dan longsor di Aceh?', 'intent' => 'disaster_info'],
+    ['q' => 'Apa kabar pemulihan pascabencana di Sumatera Barat?', 'intent' => 'disaster_info'],
+    ['q' => 'Berapa jumlah korban dan pengungsi akibat bencana Sumatera?', 'intent' => 'disaster_info'],
+    ['q' => 'Jalan Padang–Bukittinggi via Malalak apakah bisa dilewati?', 'intent' => 'disaster_info'],
+    ['q' => 'Apakah Jembatan Tenge Besi di Bener Meriah masih terputus?', 'intent' => 'disaster_info'],
+    ['q' => 'Adakah informasi gempa atau cuaca ekstrem terbaru dari BMKG?', 'intent' => 'disaster_info'],
 
     // 2. VERIFIKASI KLAIM ---------------------------------------------------
     ['q' => 'Benarkah air laut di Pidie Jaya Aceh naik dan akan terjadi tsunami?', 'intent' => 'claim_verification', 'status' => 'hoax'],
-    ['q' => 'Kata teman saya akan ada banjir besar di Binjai hari ini, benar tidak?', 'intent' => 'claim_verification', 'status' => 'no_official_data'],
-    ['q' => 'Apakah benar akan ada gempa susulan dahsyat malam ini?', 'intent' => 'claim_verification', 'status' => 'hoax'],
-    ['q' => 'Beredar kabar Bendungan Namo Rambe Deli Serdang akan jebol, benarkah?', 'intent' => 'claim_verification', 'status' => 'hoax'],
+    ['q' => 'Katanya air laut naik bak tsunami di pantai utara Jawa Tengah, benar?', 'intent' => 'claim_verification', 'status' => 'hoax'],
+    ['q' => 'Ada tautan pendaftaran Internet Rakyat gratis 3 bulan, itu asli atau hoaks?', 'intent' => 'claim_verification', 'status' => 'hoax'],
+    ['q' => 'Apakah benar akan ada gempa susulan dahsyat malam ini?', 'intent' => 'claim_verification'],
     ['q' => 'Viral pesan WhatsApp peringatan tsunami malam ini, ini valid atau hoaks?', 'intent' => 'claim_verification'],
     ['q' => 'Benarkah ada rekening donasi resmi untuk korban banjir yang disebar di grup?', 'intent' => 'claim_verification'],
     ['q' => 'Tolong cek kebenaran kabar bahwa bendungan akan dibuka dan menyebabkan banjir', 'intent' => 'claim_verification'],
-    ['q' => 'Apa betul BMKG mengeluarkan peringatan dini gempa untuk besok pagi?', 'intent' => 'claim_verification', 'status' => 'hoax'],
+    ['q' => 'Apa betul BMKG mengeluarkan peringatan dini gempa untuk besok pagi?', 'intent' => 'claim_verification'],
 
     // 3. LOKASI POSKO / SHELTER --------------------------------------------
-    ['q' => 'Posko pengungsian di Binjai di mana?', 'intent' => 'shelter_location'],
-    ['q' => 'Di mana lokasi dapur umum untuk korban banjir di Binjai?', 'intent' => 'shelter_location'],
-    ['q' => 'Saya butuh pos kesehatan terdekat di Binjai', 'intent' => 'shelter_location'],
-    ['q' => 'Tempat pengungsian yang tersedia di Kota Binjai?', 'intent' => 'shelter_location'],
-    ['q' => 'Ada shelter atau tempat mengungsi di Binjai Timur?', 'intent' => 'shelter_location'],
-    ['q' => 'Lokasi posko bantuan bencana di Binjai', 'intent' => 'shelter_location'],
-    ['q' => 'Ke mana saya harus mengungsi jika rumah saya di Binjai kebanjiran?', 'intent' => 'shelter_location'],
-    ['q' => 'Daftar titik kumpul evakuasi di Binjai', 'intent' => 'shelter_location'],
+    ['q' => 'Posko pengungsian di Aceh Tamiang di mana?', 'intent' => 'shelter_location'],
+    ['q' => 'Di mana posko pengungsian di Padang Panjang?', 'intent' => 'shelter_location'],
+    ['q' => 'Posko di Agam ada di mana?', 'intent' => 'shelter_location'],
+    ['q' => 'Pos koordinasi bencana di Medan di mana?', 'intent' => 'shelter_location'],
+    ['q' => 'Tempat mengungsi di Banda Aceh?', 'intent' => 'shelter_location'],
+    ['q' => 'Lokasi posko di Kota Padang?', 'intent' => 'shelter_location'],
+    ['q' => 'Posko pengungsian terdekat di Aceh Besar?', 'intent' => 'shelter_location'],
+    ['q' => 'Ke mana saya harus mengungsi jika rumah saya di Aceh Tamiang kebanjiran?', 'intent' => 'shelter_location'],
 
     // 4. BANTUAN SOSIAL / BANSOS -------------------------------------------
-    ['q' => 'Daerah saya di Binjai kena bencana, ada bantuan apa?', 'intent' => 'aid_assistance'],
-    ['q' => 'Bantuan sosial apa yang tersedia untuk korban banjir di Binjai?', 'intent' => 'aid_assistance'],
-    ['q' => 'Bagaimana cara mendapat bantuan logistik darurat di Binjai?', 'intent' => 'aid_assistance'],
-    ['q' => 'Apakah ada bantuan tunai dari Kemensos untuk korban bencana Binjai?', 'intent' => 'aid_assistance'],
-    ['q' => 'Program bansos untuk warga terdampak banjir di Binjai?', 'intent' => 'aid_assistance'],
-    ['q' => 'Saya korban banjir, bantuan pangan apa yang bisa saya terima?', 'intent' => 'aid_assistance'],
-    ['q' => 'Apa syarat menerima bantuan bencana di Binjai?', 'intent' => 'aid_assistance'],
-    ['q' => 'Bantuan dari BNPB untuk pengungsi di Binjai apa saja?', 'intent' => 'aid_assistance'],
+    ['q' => 'Saya korban bencana, bagaimana cara cek bansos PKH atau BPNT?', 'intent' => 'aid_assistance'],
+    ['q' => 'Berapa nominal bantuan BPNT dan PKH tahun 2026?', 'intent' => 'aid_assistance'],
+    ['q' => 'Apa itu Dana Tunggu Hunian (DTH) dan siapa yang berhak?', 'intent' => 'aid_assistance'],
+    ['q' => 'Bagaimana mekanisme penyaluran bantuan pascabencana?', 'intent' => 'aid_assistance'],
+    ['q' => 'Apa itu desil DTSEN dalam penentuan bansos?', 'intent' => 'aid_assistance'],
+    ['q' => 'Saya korban banjir, bantuan apa yang bisa saya terima?', 'intent' => 'aid_assistance'],
+    ['q' => 'Bagaimana cara cek status penerima bantuan sosial?', 'intent' => 'aid_assistance'],
+    ['q' => 'Apa syarat menerima bantuan tunai untuk korban bencana?', 'intent' => 'aid_assistance'],
 
     // 5. DI LUAR KONTEKS ----------------------------------------------------
     ['q' => 'Siapa presiden Indonesia saat ini?', 'intent' => 'out_of_scope'],

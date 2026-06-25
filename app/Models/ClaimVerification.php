@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\Vector;
 use App\Models\Concerns\HasCitations;
 use App\Models\Concerns\TracksCuration;
 use Database\Factories\ClaimVerificationFactory;
@@ -28,7 +29,7 @@ class ClaimVerification extends Model
     ];
 
     protected $casts = [
-        'embedding' => 'array',
+        'embedding' => Vector::class,
         'is_active' => 'boolean',
     ];
 

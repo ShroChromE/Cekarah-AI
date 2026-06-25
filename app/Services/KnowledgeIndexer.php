@@ -43,47 +43,32 @@ class KnowledgeIndexer
     }
 
     /**
-     * Find the top-K most similar chunks to a query string using cosine similarity.
+     * Find the top-K most similar chunks to a query string using pgvector cosine
+     * distance (`<=>`). similarity = 1 - cosine_distance.
      *
      * @return array<int, array{chunk_text: string, title: string, source_name: string, source_url: string, is_stale: bool, similarity: float}>
      */
     public function similarChunks(string $query, int $topK = 5): array
     {
         $queryEmbedding = Embeddings::for([$query])->generate()->embeddings[0];
+        $literal = '['.implode(',', $queryEmbedding).']';
 
-        $chunks = KnowledgeChunk::with('document')->get();
-
-        $scored = $chunks
-            ->filter(fn ($c) => ! empty($c->embedding))
-            ->map(fn ($c) => [
+        return KnowledgeChunk::query()
+            ->whereNotNull('embedding')
+            ->with('document')
+            ->select('knowledge_chunks.*')
+            ->selectRaw('1 - (embedding <=> ?::vector) AS similarity', [$literal])
+            ->orderByRaw('embedding <=> ?::vector', [$literal])
+            ->limit($topK)
+            ->get()
+            ->map(fn (KnowledgeChunk $c) => [
                 'chunk_text' => $c->chunk_text,
                 'title' => $c->document->title,
                 'source_name' => $c->document->source_name,
                 'source_url' => $c->document->source_url,
                 'is_stale' => $c->document->source_date?->lt(now()->subMonths(6)) ?? false,
-                'similarity' => $this->cosineSimilarity($queryEmbedding, $c->embedding),
+                'similarity' => (float) $c->similarity,
             ])
-            ->sortByDesc('similarity')
-            ->take($topK)
-            ->values();
-
-        return $scored->toArray();
-    }
-
-    private function cosineSimilarity(array $a, array $b): float
-    {
-        $dot = 0.0;
-        $normA = 0.0;
-        $normB = 0.0;
-
-        foreach ($a as $i => $val) {
-            $dot += $val * ($b[$i] ?? 0);
-            $normA += $val * $val;
-            $normB += ($b[$i] ?? 0) ** 2;
-        }
-
-        $denom = sqrt($normA) * sqrt($normB);
-
-        return $denom > 0 ? $dot / $denom : 0.0;
+            ->all();
     }
 }

@@ -7,8 +7,7 @@ use Laravel\Ai\Embeddings;
 
 /**
  * Keeps claim_verifications retrievable by the verify_claim tool: generates an
- * embedding for each claim and runs in-PHP cosine similarity (pgvector is not
- * available in this environment, mirroring KnowledgeIndexer).
+ * embedding for each claim and runs pgvector cosine similarity (`<=>`).
  */
 class ClaimIndexer
 {
@@ -31,44 +30,26 @@ class ClaimIndexer
     public function similar(string $query, int $topK = 3, float $minScore = 0.7): array
     {
         $queryEmbedding = Embeddings::for([$query])->generate()->embeddings[0];
+        $literal = '['.implode(',', $queryEmbedding).']';
 
         return ClaimVerification::query()
             ->active()
             ->whereNotNull('embedding')
+            ->select('claim_verifications.*')
+            ->selectRaw('1 - (embedding <=> ?::vector) AS similarity', [$literal])
+            ->orderByRaw('embedding <=> ?::vector', [$literal])
+            ->limit($topK)
             ->get()
             ->map(fn (ClaimVerification $c) => [
                 'claim_text' => $c->claim_text,
                 'status' => $c->status,
                 'explanation' => $c->explanation,
                 'region' => $c->region,
-                'similarity' => $this->cosineSimilarity($queryEmbedding, $c->embedding ?? []),
+                'similarity' => (float) $c->similarity,
                 'model' => $c,
             ])
             ->filter(fn ($row) => $row['similarity'] >= $minScore)
-            ->sortByDesc('similarity')
-            ->take($topK)
             ->values()
             ->all();
-    }
-
-    /**
-     * @param  array<int, float>  $a
-     * @param  array<int, float>  $b
-     */
-    private function cosineSimilarity(array $a, array $b): float
-    {
-        $dot = 0.0;
-        $normA = 0.0;
-        $normB = 0.0;
-
-        foreach ($a as $i => $val) {
-            $dot += $val * ($b[$i] ?? 0);
-            $normA += $val * $val;
-            $normB += ($b[$i] ?? 0) ** 2;
-        }
-
-        $denom = sqrt($normA) * sqrt($normB);
-
-        return $denom > 0 ? $dot / $denom : 0.0;
     }
 }

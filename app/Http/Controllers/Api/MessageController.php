@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Ai\Agents\CekarahAgent;
 use App\Ai\Support\AgentReplyParser;
+use App\Ai\Support\SafetyGuard;
 use App\Http\Controllers\Controller;
 use App\Models\ChatSession;
 use App\Services\RegionExtractor;
@@ -23,6 +24,8 @@ use Throwable;
 
 class MessageController extends Controller
 {
+    public function __construct(private readonly SafetyGuard $guard) {}
+
     public function store(Request $request, string $token): JsonResponse
     {
         $validated = $request->validate([
@@ -31,15 +34,20 @@ class MessageController extends Controller
 
         $session = ChatSession::where('token', $token)->firstOrFail();
 
+        // Privacy guard: strip NIK/KK-like sequences before the message ever
+        // reaches the model or is stored.
+        $content = $this->guard->redactSensitive($validated['content'])['text'];
+
         try {
-            $response = $this->runAgent($session, $validated['content']);
+            $response = $this->runAgent($session, $content);
             $data = AgentReplyParser::parse($response->text);
+            $data = $this->applyEscalation($content, $data);
 
             $session->update([
                 'last_intent' => $data['intent'],
                 'last_confidence_pct' => (int) round($data['confidence'] * 100),
             ]);
-            $this->logIntent($session, $validated['content'], $data);
+            $this->logIntent($session, $content, $data);
 
             return response()->json($data, 201);
         } catch (Throwable $e) {
@@ -65,7 +73,7 @@ class MessageController extends Controller
         ]);
 
         $session = ChatSession::where('token', $token)->firstOrFail();
-        $content = $validated['content'];
+        $content = $this->guard->redactSensitive($validated['content'])['text'];
 
         return response()->stream(function () use ($session, $content) {
             $delimiter = AgentReplyParser::DELIMITER;
@@ -142,6 +150,7 @@ class MessageController extends Controller
                 }
 
                 $data = AgentReplyParser::parse($buffer);
+                $data = $this->applyEscalation($content, $data);
 
                 $session->update([
                     'last_intent' => $data['intent'],
@@ -301,6 +310,28 @@ class MessageController extends Controller
     }
 
     /**
+     * Force-surface emergency contacts when the user's message describes a
+     * life-threatening situation, regardless of the model's own classification.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function applyEscalation(string $content, array $data): array
+    {
+        if (! $this->guard->isLifeThreatening($content)) {
+            return $data;
+        }
+
+        $data['escalation_suggested'] = true;
+
+        if (empty($data['escalation_contacts'])) {
+            $data['escalation_contacts'] = $this->guard->escalationContacts();
+        }
+
+        return $data;
+    }
+
+    /**
      * Write a single SSE frame and flush it to the client immediately.
      *
      * @param  array<string, mixed>  $data
@@ -376,10 +407,7 @@ class MessageController extends Controller
             'intent' => 'error',
             'confidence' => 0,
             'escalation_suggested' => true,
-            'escalation_contacts' => [
-                ['name' => 'BNPB', 'contact' => '117 ext 7', 'available' => '24 jam'],
-                ['name' => 'Basarnas', 'contact' => '115', 'available' => '24 jam'],
-            ],
+            'escalation_contacts' => $this->guard->escalationContacts(),
             'sources_used' => [],
         ];
     }

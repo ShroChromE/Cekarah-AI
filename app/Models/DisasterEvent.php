@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\Vector;
 use App\Models\Concerns\HasCitations;
 use Database\Factories\DisasterEventFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,7 +34,7 @@ class DisasterEvent extends Model
         'started_at' => 'date',
         'latitude' => 'float',
         'longitude' => 'float',
-        'embedding' => 'array',
+        'embedding' => Vector::class,
         'is_active' => 'boolean',
     ];
 

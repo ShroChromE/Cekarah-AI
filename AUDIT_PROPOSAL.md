@@ -29,7 +29,7 @@
 | Peta | Leaflet 1.9.4 — **dimuat via CDN runtime** di `resources/js/components/ShelterMap.tsx`, BUKAN dependency npm |
 | Test | PHPUnit `^12.5.23`, Larastan `^3.9`, Pint `^1.27` |
 
-> ⚠️ **Catatan akurasi stack:** Proposal sering menyebut **"pgvector"**. Di kode, embedding disimpan sebagai `jsonb` dan kemiripan kosinus **dihitung di PHP** (`app/Services/KnowledgeIndexer.php`, `app/Services/ClaimIndexer.php` — lihat komentar `pgvector is not available`). Jadi **pgvector tidak benar-benar dipakai di kode saat ini** — sebut sebagai rencana produksi, bukan kondisi aktual.
+> ✅ **pgvector AKTIF (diperbaiki 2026-06-25).** Kolom `embedding` pada `knowledge_chunks`, `claim_verifications`, dan `disaster_events` kini bertipe **`vector(3072)`** (migrasi `2026_06_25_040000_convert_embeddings_to_pgvector`). Kemiripan kosinus dihitung **di PostgreSQL** via operator `<=>` di `app/Services/KnowledgeIndexer.php::similarChunks` & `app/Services/ClaimIndexer.php::similar` (`1 - (embedding <=> ?::vector)`). Cast `app/Casts/Vector.php` menjembatani array PHP ↔ literal pgvector. Klaim "pgvector" di proposal kini **benar/aktual**. (Tanpa indeks ANN — dataset kecil, sequential scan; pgvector ANN dibatasi 2000 dim.)
 
 ---
 
@@ -39,8 +39,8 @@
 |---|---|---|
 | **Pemahaman masalah & relevansi (20%)** | Scope 4 kebutuhan krisis dikodekan di system prompt `app/Ai/Agents/CekarahAgent.php` (baris 31–47); 4 tool spesifik `app/Ai/Tools/*`; dataset bencana riil Sumatera 2025–2026 di `database/seeders/DatasetSeeder.php`. | Relevansi masalah hanya tampak dari data/scope; tidak ada halaman "latar belakang" lagi (halaman `/about` sudah dihapus). |
 | **Kreativitas & inovasi solusi (20%)** | Routing intent otomatis via function-calling (bukan menu); **Radar Tren** clustering klaim mirip `app/Services/RadarService.php`; human-in-the-loop sync ke RAG `app/Http/Controllers/Portal/ClaimVerificationController.php@reindex`. | Radar saat ini minim data live (lihat §4c: 0 baris simulasi termuat). |
-| **Pemanfaatan AI efektif & tepat guna (20%)** | (a) Agen utama Gemini `gemini-3-flash-preview` + 4 function tools; (b) RAG retrieval semantik `KnowledgeIndexer::similarChunks` & `ClaimIndexer::similar`; (c) riset web grounded Google Search `app/Ai/Agents/WebResearchAgent.php` (`gemini-2.5-flash`); (d) embeddings via `Laravel\Ai\Embeddings`. | Pencarian kemiripan = cosine di PHP (bukan pgvector); skala besar belum dioptimasi. |
-| **Responsible AI: risiko, mitigasi, peran manusia (15%)** | System prompt mewajibkan sumber + larangan vonis biner + fallback jujur (CekarahAgent baris 57–65); review queue + audit trail (`created_by/updated_by`) di Portal Relawan; deteksi fallback `MessageController::toolFoundNothing`. | Tidak ada guard kode privasi/NIK (lihat §5); klaim medis/hukum tidak diblok eksplisit. |
+| **Pemanfaatan AI efektif & tepat guna (20%)** | (a) Agen utama Gemini `gemini-3-flash-preview` + 4 function tools; (b) RAG retrieval semantik `KnowledgeIndexer::similarChunks` & `ClaimIndexer::similar`; (c) riset web grounded Google Search `app/Ai/Agents/WebResearchAgent.php` (`gemini-2.5-flash`); (d) embeddings via `Laravel\Ai\Embeddings`. | Pencarian kemiripan kini **pgvector `<=>`** (vector(3072)); tanpa indeks ANN (dataset kecil) — perlu indeks bila data membesar. |
+| **Responsible AI: risiko, mitigasi, peran manusia (15%)** | System prompt mewajibkan sumber + larangan vonis biner + fallback jujur (CekarahAgent baris 57–65); review queue + audit trail (`created_by/updated_by`) di Portal Relawan; deteksi fallback `MessageController::toolFoundNothing`; **guard privasi NIK + disclaimer medis/hukum + deteksi eskalasi** di `SafetyGuard` (diperbaiki). | — gap utama sudah ditutup (lihat §5). |
 | **Fungsionalitas aplikasi/prototipe (15%)** | 28 route aktif (`php artisan route:list`); chat streaming SSE `MessageController::stream`; CRUD portal lengkap; peta Leaflet berfungsi; tes `tests/Feature/Portal/RadarTest.php` (5 lulus). | Beberapa skenario uji (`database/data/evaluation_cases.php`) masih merujuk Binjai yang datanya sudah diganti. |
 | **Kejelasan presentasi — pitch/video/dokumentasi (10%)** | Dokumen konteks `context-update-proposal-fitur-baru.md`, `context-update-video-remotion-fitur-baru.md`; UI rapi (Landing, Chat, Portal). | **Tidak ada project Remotion di repo ini** — video di repo terpisah (lihat §6). |
 
@@ -184,13 +184,16 @@
 | `aid_programs` | **5** | — (tanggal via `sources`) | `cekbansos.kemensos.go.id`, `mediaindonesia.com/.../dth...` |
 | `claim_verifications` | **3** | — (tanggal via `sources`) | `komdigi.go.id/.../hoaks-air-laut-naik-...-pidie-jaya` |
 | `sources` | **13** | `published_at` 2025-12-01 … 2026-06-25 | BNPB, Komdigi, Kemensos, Kemenko PMK, Kemendagri |
-| `knowledge_documents` | **30** | `source_date` 2025-01-01 … 2026-06-25 | **20 SINTETIS** (`sintetis://cekarah-team/...`) + **10 RIIL** (`bnpb.go.id`, `data.bnpb.go.id`, `kemenkopmk.go.id`, kompas) |
-| `knowledge_chunks` | **30** | — | (turunan embedding dari knowledge_documents) |
-| `intent_logs` | **8** (0 simulasi) | — | log chat; demo radar perlu re-seed |
+| `knowledge_documents` | **10** (semua RIIL) | `source_date` 2025-12-02 … 2026-06-25 | `bnpb.go.id`, `data.bnpb.go.id`, `kemenkopmk.go.id`, kompas/Kemendagri |
+| `knowledge_chunks` | **10** | — | turunan embedding `vector(3072)` dari knowledge_documents |
+| `emergency_contacts` | **8** | — | BNPB 117, Basarnas 115, Ambulans 118/119, Damkar 113, Polisi 110, PMI, Kemensos 1500771, BMKG |
+| `intent_logs` | **197 simulasi** + log chat live | — | demo radar sudah ter-seed (`RadarSimulationSeeder`) |
 
-> ⚠️ **Kejujuran data penting:** Dokumen sumber Anda menyebut tabel `disasters`, `social_aids`, `hoax_verifications`, `emergency_contacts` — **nama-nama itu TIDAK ada di skema kode**. Skema aktual memakai `disaster_events`, `aid_programs`, `claim_verifications`. **Tidak ada tabel `emergency_contacts`** `[BELUM ADA DI KODE]`; kontak darurat (BNPB 117, Basarnas 115) ada sebagai **teks hardcoded** di system prompt & `MessageController::errorPayload`, bukan tabel berdata.
+> ✅ **Diperbaiki 2026-06-25:**
+> - **Dokumen sintetis dihapus.** Seluruh 20 dokumen "Data Sintetis Tim Cekarah" (`sintetis://`) telah dibuang; `knowledge_documents` kini **10 dokumen, semuanya bersumber resmi tertelusur**. Tidak ada lagi konten karangan di knowledge base.
+> - **Tabel `emergency_contacts` kini ADA** (`2026_06_25_041000_create_emergency_contacts_table` + `EmergencyContactSeeder`, 8 baris). Kontak darurat tidak lagi sekadar hardcoded — `MessageController` & `SafetyGuard::escalationContacts` membacanya dari DB (dengan fallback).
 >
-> ⚠️ **20 dari 30 knowledge_documents adalah data SINTETIS** (label `Data Sintetis Tim Cekarah`, URL `sintetis://`). Hanya 10 knowledge doc + seluruh `sources`/tabel terstruktur yang bersumber resmi tertelusur. Jangan mengklaim seluruh knowledge base sebagai data resmi.
+> ℹ️ Catatan penamaan tetap berlaku: skema kode memakai `disaster_events`, `aid_programs`, `claim_verifications` (bukan `disasters`/`social_aids`/`hoax_verifications` dari dokumen sumber).
 
 ---
 
@@ -201,9 +204,9 @@
 | Grounding wajib sumber+tanggal di tiap respons | `[ADA]` | `CekarahAgent` instructions baris 59–60 ("SELALU sertakan rujukan sumber + tanggal"); tool mengembalikan `references` dari `sources` (`app/Ai/Support/ToolReferences.php`). |
 | Fallback "belum ada data resmi" saat RAG kosong | `[ADA]` | Tiap tool mengembalikan `found=false`/`no_official_data` saat DB & web kosong (`SearchDisasterInfoTool`, `VerifyClaimTool`, dll.); ditangkap `MessageController::toolFoundNothing` → flag `needs_review`. |
 | Larangan AI berspekulasi di luar dokumen | `[ADA]` | System prompt baris 31–47 (scope 4 kebutuhan, tolak out-of-scope, "jangan menjawab dari pengetahuan umum"). |
-| Eskalasi kontak darurat untuk situasi mengancam nyawa | `[SEBAGIAN]` | Prompt memerintahkan ingatkan BNPB 117/Basarnas 115 (baris 64), dan `errorPayload` selalu menyertakan kontak saat error. **Tidak ada deteksi keyword bahaya** terprogram (mis. "terjebak banjir") → bergantung pada kepatuhan model, bukan guard kode. |
-| Larangan klaim medis/hukum definitif | `[BELUM ADA DI KODE]` | Tidak ditemukan instruksi/guard khusus medis/hukum di prompt maupun kode. |
-| Penanganan privasi (cegah terima/simpan NIK) | `[BELUM ADA DI KODE]` | Tidak ada validasi/guard yang memblok input berpola NIK. Klaim "tidak meminta/menyimpan NIK" hanya ada sebagai **teks deskripsi** di data `aid_programs`, bukan kontrol di kode. Validasi pesan hanya `required|string|max:2000` (`MessageController::store/stream`). |
+| Eskalasi kontak darurat untuk situasi mengancam nyawa | `[ADA]` (diperbaiki) | `app/Ai/Support/SafetyGuard.php::isLifeThreatening` mendeteksi keyword bahaya (terjebak, hanyut, tenggelam, dll.); `MessageController::applyEscalation` memaksa `escalation_suggested=true` + lampirkan kontak dari DB, terlepas dari klasifikasi model. Kontak dari `EmergencyContact` (fallback hardcoded). |
+| Larangan klaim medis/hukum definitif | `[ADA]` (diperbaiki) | Ditambahkan ke system prompt `CekarahAgent`: larangan diagnosis/nasihat medis & hukum definitif; arahkan ke ambulans 119 (medis) / instansi berwenang (hukum). |
+| Penanganan privasi (cegah terima/simpan NIK) | `[ADA]` (diperbaiki) | `SafetyGuard::redactSensitive` meredaksi pola NIK/KK (16 digit) **sebelum** pesan dikirim ke model & sebelum disimpan di `intent_logs` (`MessageController::store/stream`). System prompt juga melarang meminta NIK. Diuji di `tests/Feature/SafetyGuardTest.php`. |
 | Vonis non-biner pada verifikasi klaim | `[ADA]` | Prompt baris 63 + `VerifyClaimTool` guidance ("jangan vonis tanpa rujukan"). |
 | Auditabilitas | `[ADA]` | `intent_logs` mencatat intent/tool/region tiap pesan; audit trail `created_by/updated_by` pada data portal. |
 | Transparansi data simulasi | `[SEBAGIAN]` | `Source.is_simulated` & `intent_logs.is_simulated` ada; tetapi dataset utama kini `is_simulated=false`. Yang masih sintetis = 20 knowledge_documents (ditandai di `source_name`). |
@@ -242,8 +245,16 @@
 
 ---
 
-## Lampiran — Temuan yang Perlu Tindakan (di luar audit, untuk Anda putuskan)
-1. `intent_logs` 0 baris simulasi → jalankan `php artisan db:seed --class=RadarSimulationSeeder` agar Radar Tren representatif untuk demo/video.
-2. `database/data/evaluation_cases.php` masih berbasis Binjai (data sudah diganti) → selaraskan sebelum menjalankan `php artisan cekarah:evaluate`.
-3. Proposal: hindari klaim "pgvector" & "emergency_contacts table" — keduanya belum ada di kode.
-4. Guard privasi NIK & disclaimer medis/hukum: bila ingin diklaim di Responsible AI, perlu ditambahkan ke kode dulu (kini `[BELUM ADA DI KODE]`).
+## Lampiran — Status Perbaikan Gap (diperbarui 2026-06-25)
+
+| # | Gap | Status |
+|---|---|---|
+| 1 | pgvector tidak aktif | ✅ **Selesai** — kolom `vector(3072)` + operator `<=>` (migrasi + 2 service + cast). |
+| 2 | Tabel `emergency_contacts` tidak ada | ✅ **Selesai** — tabel + model + seeder (8 kontak) + wiring ke `SafetyGuard`/`MessageController`. |
+| 3 | 20/30 knowledge doc sintetis | ✅ **Selesai** — dokumen sintetis dihapus; tersisa 10 dokumen riil. |
+| 4 | Guard NIK / disclaimer medis-hukum / eskalasi | ✅ **Selesai** — `SafetyGuard` (redaksi NIK + deteksi eskalasi) + aturan prompt; diuji `SafetyGuardTest`. |
+| 5 | Radar/region = algoritmik (bukan AI) | ℹ️ **Klarifikasi dokumentasi** — sudah ditandai jujur; tetap algoritmik (token Jaccard + keyword), bukan AI generatif. |
+| 6 | Nama model | ℹ️ **Informasional** — `gemini-3-flash-preview` (agen), `gemini-2.5-flash` (riset web), embeddings Gemini 3072-dim. |
+| 7 | Radar kosong & eval cases Binjai | ✅ **Selesai** — `RadarSimulationSeeder` (197 baris, wilayah riil) + `evaluation_cases.php` diselaraskan ke data riil (Aceh/Sumut/Sumbar). |
+
+**Catatan tes:** Tes baru `SafetyGuardTest` (4) & `RadarTest` (5) lulus. Kegagalan suite lain (Teams/Dashboard "Route not defined", auth "Vite manifest") **pra-eksis & tidak terkait** perubahan ini — tes sisa starter-kit untuk fitur yang sudah dihapus + halaman yang butuh `npm run build`.
