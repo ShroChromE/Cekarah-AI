@@ -7,11 +7,9 @@ use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
-use Laravel\Passkeys\Contracts\PasskeyLoginResponse;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -57,25 +55,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard'));
-    }
-
-    public function test_passkey_login_response_redirects_to_the_current_team_dashboard(): void
-    {
-        $user = User::factory()->create();
-
-        $request = Request::create(route('login', absolute: false), 'GET', server: [
-            'HTTP_ACCEPT' => 'application/json',
-        ]);
-        $request->setLaravelSession($this->app['session.store']);
-        $request->setUserResolver(fn () => $user);
-
-        $jsonResponse = app(PasskeyLoginResponse::class)->toResponse($request);
-
-        $this->assertSame(
-            route('dashboard', ['current_team' => $user->personalTeam()->slug]),
-            $jsonResponse->getData()->redirect,
-        );
+        $response->assertRedirect('/portal');
     }
 
     public function test_users_with_two_factor_enabled_are_redirected_to_two_factor_challenge()

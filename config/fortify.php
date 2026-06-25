@@ -162,16 +162,14 @@ return [
 
     'features' => [
         Features::registration(),
-        Features::resetPasswords(),
-        Features::emailVerification(),
-        Features::twoFactorAuthentication([
-            'confirm' => true,
-            'confirmPassword' => true,
-            // 'window' => 0
-        ]),
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]),
+        // Cekarah hanya memerlukan login + registrasi untuk relawan/admin.
+        // Fitur berikut dinonaktifkan karena halaman/alurnya belum dibangun dan
+        // tidak dibutuhkan untuk lingkup aplikasi krisis ini (route-nya tadinya
+        // 500 karena halaman React-nya tidak ada). Aktifkan kembali bila perlu.
+        // Features::resetPasswords(),
+        // Features::emailVerification(),
+        // Features::twoFactorAuthentication(['confirm' => true, 'confirmPassword' => true]),
+        // Features::passkeys(['confirmPassword' => true]),
     ],
 
 ];
