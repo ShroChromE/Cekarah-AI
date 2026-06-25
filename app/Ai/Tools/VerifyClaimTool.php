@@ -4,7 +4,7 @@ namespace App\Ai\Tools;
 
 use App\Ai\Support\ToolReferences;
 use App\Ai\Support\WebResearch;
-use App\Models\ClaimVerification;
+use App\Services\ClaimIndexer;
 use App\Services\KnowledgeIndexer;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Tool;
@@ -14,6 +14,7 @@ class VerifyClaimTool implements Tool
 {
     public function __construct(
         private readonly KnowledgeIndexer $indexer,
+        private readonly ClaimIndexer $claims,
         private readonly WebResearch $web,
     ) {}
 
@@ -33,20 +34,16 @@ class VerifyClaimTool implements Tool
     {
         $claim = $request['claim'];
 
-        // Structured records of known claims/hoax patterns (populated in Fase 4).
-        $records = ClaimVerification::query()
-            ->active()
-            ->where('claim_text', 'ilike', '%'.substr($claim, 0, 40).'%')
-            ->with('sources')
-            ->limit(3)
-            ->get()
-            ->map(fn (ClaimVerification $c) => [
-                'claim_text' => $c->claim_text,
-                'status' => $c->status,
-                'explanation' => $c->explanation,
-                'references' => ToolReferences::fromSources($c->sources),
-            ])
-            ->all();
+        // Semantic match against curated/known claims (incl. volunteer additions).
+        $records = array_map(
+            fn (array $row) => [
+                'claim_text' => $row['claim_text'],
+                'status' => $row['status'],
+                'explanation' => $row['explanation'],
+                'references' => ToolReferences::fromSources($row['model']->sources),
+            ],
+            $this->claims->similar($claim, 3),
+        );
 
         // Supplement with knowledge base hoax-pattern / official-channel docs.
         $chunks = $this->indexer->similarChunks($claim, 4);
