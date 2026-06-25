@@ -3,6 +3,7 @@
 use App\Http\Controllers\Portal\AidProgramController;
 use App\Http\Controllers\Portal\ClaimVerificationController;
 use App\Http\Controllers\Portal\DashboardController;
+use App\Http\Controllers\Portal\RadarController;
 use App\Http\Controllers\Portal\ReviewController;
 use App\Http\Controllers\Portal\ShelterLocationController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,8 @@ Route::get('/about', fn () => Inertia::render('About'))->name('about');
 // Portal Relawan — volunteers/admins only.
 Route::middleware(['auth', 'role:admin,volunteer'])->prefix('portal')->name('portal.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/radar', [RadarController::class, 'index'])->name('radar.index');
 
     Route::get('/review', [ReviewController::class, 'index'])->name('review.index');
     Route::patch('/review/{log}/resolve', [ReviewController::class, 'resolve'])->name('review.resolve');

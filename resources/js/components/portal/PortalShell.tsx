@@ -9,6 +9,7 @@ type PageProps = {
 
 const NAV = [
     { label: 'Dashboard', href: '/portal', match: /^\/portal$/ },
+    { label: 'Radar Tren', href: '/portal/radar', match: /^\/portal\/radar/ },
     { label: 'Perlu Ditinjau', href: '/portal/review', match: /^\/portal\/review/ },
     { label: 'Posko', href: '/portal/shelters', match: /^\/portal\/shelters/ },
     { label: 'Bantuan', href: '/portal/aid', match: /^\/portal\/aid/ },

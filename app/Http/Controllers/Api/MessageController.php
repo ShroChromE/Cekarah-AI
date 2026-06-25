@@ -6,6 +6,7 @@ use App\Ai\Agents\CekarahAgent;
 use App\Ai\Support\AgentReplyParser;
 use App\Http\Controllers\Controller;
 use App\Models\ChatSession;
+use App\Services\RegionExtractor;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -292,6 +293,7 @@ class MessageController extends Controller
             'conversation_id' => $session->conversation_id,
             'user_message' => $userMessage,
             'detected_intent' => $intent,
+            'region' => app(RegionExtractor::class)->extract($userMessage),
             'tool_called' => self::INTENT_TOOL[$intent] ?? null,
             'needs_review' => $needsReview,
             'confidence' => $data['confidence'] ?? null,
