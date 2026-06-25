@@ -12,7 +12,6 @@ use Inertia\Inertia;
 // Public, no-login chat for citizens.
 Route::get('/', fn () => Inertia::render('Landing'))->name('home');
 Route::get('/chat', fn () => Inertia::render('Chat'))->name('chat');
-Route::get('/about', fn () => Inertia::render('About'))->name('about');
 
 // Portal Relawan — volunteers/admins only.
 Route::middleware(['auth', 'role:admin,volunteer'])->prefix('portal')->name('portal.')->group(function () {

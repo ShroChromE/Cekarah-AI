@@ -75,12 +75,6 @@ export default function Landing() {
                     </div>
                     <div className="flex items-center gap-6">
                         <Link
-                            href="/about"
-                            className="text-sm text-slate-300 transition-colors hover:text-white"
-                        >
-                            Tentang
-                        </Link>
-                        <Link
                             href="/chat"
                             className="rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white ring-1 ring-white/15 backdrop-blur-sm transition-all hover:bg-white/20"
                         >
@@ -146,12 +140,6 @@ export default function Landing() {
                                         <span className="transition-transform group-hover:translate-x-1">
                                             →
                                         </span>
-                                    </Link>
-                                    <Link
-                                        href="/about"
-                                        className="text-sm text-slate-400 underline-offset-4 transition-colors hover:text-slate-200 hover:underline"
-                                    >
-                                        Pelajari cara kerja
                                     </Link>
                                 </div>
                             </Reveal>
@@ -490,12 +478,6 @@ export default function Landing() {
                             className="transition-colors hover:text-slate-400"
                         >
                             Chat
-                        </Link>
-                        <Link
-                            href="/about"
-                            className="transition-colors hover:text-slate-400"
-                        >
-                            Tentang
                         </Link>
                     </div>
                     <span>Dibuat dengan Laravel 13 + Gemini AI</span>
