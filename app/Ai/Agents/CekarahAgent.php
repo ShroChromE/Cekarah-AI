@@ -7,21 +7,46 @@ use App\Ai\Tools\GetAidAssistanceInfoTool;
 use App\Ai\Tools\SearchDisasterInfoTool;
 use App\Ai\Tools\VerifyClaimTool;
 use Laravel\Ai\Attributes\MaxSteps;
+use Laravel\Ai\Attributes\MaxTokens;
 use Laravel\Ai\Attributes\Model;
 use Laravel\Ai\Attributes\Timeout;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
+use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Promptable;
 
 #[Model('gemini-2.5-flash')]
 #[MaxSteps(6)]
+#[MaxTokens(2048)]
 #[Timeout(60)]
-class CekarahAgent implements Agent, Conversational, HasTools
+class CekarahAgent implements Agent, Conversational, HasProviderOptions, HasTools
 {
     use Promptable, RemembersConversations;
+
+    /**
+     * Provider-specific generation options.
+     *
+     * On Gemini 2.5 models the "thinking" phase consumes the same output-token
+     * budget as the visible reply. Left unbounded, a long thinking pass can
+     * exhaust the budget and truncate the answer mid-sentence (finishReason
+     * MAX_TOKENS) before the ###META### marker is ever emitted. This agent only
+     * routes to a tool and formats its result, so thinking is disabled to keep
+     * the whole budget for the reply (also faster and cheaper).
+     *
+     * @return array<string, mixed>
+     */
+    public function providerOptions(Lab|string $provider): array
+    {
+        if ($provider === Lab::Gemini) {
+            return ['thinkingConfig' => ['thinkingBudget' => 0]];
+        }
+
+        return [];
+    }
 
     public function instructions(): string
     {

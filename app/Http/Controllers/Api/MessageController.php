@@ -43,11 +43,15 @@ class MessageController extends Controller
             $data = AgentReplyParser::parse($response->text);
             $data = $this->applyEscalation($content, $data);
 
+            // A reply missing the ###META### marker was truncated or malformed;
+            // flag it for volunteer review rather than trusting it silently.
+            $needsReview = ! str_contains($response->text, AgentReplyParser::DELIMITER);
+
             $session->update([
                 'last_intent' => $data['intent'],
                 'last_confidence_pct' => (int) round($data['confidence'] * 100),
             ]);
-            $this->logIntent($session, $content, $data);
+            $this->logIntent($session, $content, $data, $needsReview);
 
             return response()->json($data, 201);
         } catch (Throwable $e) {
@@ -147,6 +151,14 @@ class MessageController extends Controller
                         $emitted = $pos;
                         $metaReached = true;
                     }
+                }
+
+                // If the stream ended before the ###META### marker, the model's
+                // reply was truncated (e.g. token limit) or malformed. Flag it
+                // for volunteer review instead of silently shipping a partial
+                // answer with default (low) confidence.
+                if (! $metaReached) {
+                    $needsReview = true;
                 }
 
                 $data = AgentReplyParser::parse($buffer);
