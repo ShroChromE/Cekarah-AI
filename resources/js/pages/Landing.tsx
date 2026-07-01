@@ -362,70 +362,12 @@ export default function Landing() {
                 </div>
             </section>
 
-            {/* RESPONSIBLE AI */}
-            <section className="bg-white py-24">
-                <div className="mx-auto max-w-6xl px-6">
-                    <Reveal>
-                        <p className="text-xs font-medium tracking-widest text-slate-400 uppercase">
-                            Responsible AI
-                        </p>
-                        <h2 className="heading-tight mt-2 text-4xl font-black text-slate-900">
-                            AI ini punya batas. Sengaja.
-                        </h2>
-                    </Reveal>
-                    <div className="mt-12 grid gap-12 lg:grid-cols-2">
-                        <Reveal>
-                            <p className="leading-relaxed text-slate-600">
-                                Cekarah adalah navigator awal, bukan otoritas
-                                final. Setiap respons menyertakan rujukan sumber
-                                resmi dan kontak petugas manusia. Jika tidak
-                                yakin, sistem mendorong user untuk menghubungi
-                                petugas langsung — bukan mencoba menjawab dengan
-                                tebakan.
-                            </p>
-                        </Reveal>
-                        <Reveal delay={120} className="space-y-4 text-sm">
-                            {[
-                                {
-                                    label: 'Data sumber',
-                                    value: 'Open data publik & sintetis — tidak ada data pribadi',
-                                },
-                                {
-                                    label: 'Transparansi',
-                                    value: 'Setiap jawaban menampilkan sumber dan tingkat keyakinan AI',
-                                },
-                                {
-                                    label: 'Eskalasi',
-                                    value: 'Kontak petugas resmi tersedia di setiap respons',
-                                },
-                            ].map((item) => (
-                                <div
-                                    key={item.label}
-                                    className="flex gap-4 border-b border-slate-100 pb-4"
-                                >
-                                    <span className="w-28 shrink-0 font-medium text-slate-500">
-                                        {item.label}
-                                    </span>
-                                    <span className="text-slate-700">
-                                        {item.value}
-                                    </span>
-                                </div>
-                            ))}
-                        </Reveal>
-                    </div>
-                </div>
-            </section>
-
             {/* CTA */}
-            <section
-                className="relative overflow-hidden py-32 text-center"
-                style={{ backgroundColor: '#0A0F1E' }}
-            >
-                <div className="glow-red pointer-events-none absolute inset-0" />
+            <section className="relative bg-white py-32 text-center">
                 <div className="relative mx-auto max-w-2xl px-6">
                     <Reveal>
                         <h2
-                            className="heading-tight font-black text-white"
+                            className="heading-tight font-black text-slate-900"
                             style={{ fontSize: 'clamp(3rem, 8vw, 4rem)' }}
                         >
                             Coba sekarang.
