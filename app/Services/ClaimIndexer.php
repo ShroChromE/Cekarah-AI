@@ -29,7 +29,7 @@ class ClaimIndexer
      */
     public function similar(string $query, int $topK = 3, float $minScore = 0.7): array
     {
-        $queryEmbedding = Embeddings::for([$query])->generate()->embeddings[0];
+        $queryEmbedding = Embeddings::for([$query])->cache()->generate()->embeddings[0];
         $literal = '['.implode(',', $queryEmbedding).']';
 
         return ClaimVerification::query()

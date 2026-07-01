@@ -35,6 +35,7 @@ return [
         'embeddings' => [
             'cache' => false,
             'store' => env('CACHE_STORE', 'database'),
+            'seconds' => (int) env('AI_EMBEDDING_CACHE_SECONDS', 60 * 60 * 24 * 30),
         ],
     ],
 

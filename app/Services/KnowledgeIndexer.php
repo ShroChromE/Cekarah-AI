@@ -50,7 +50,7 @@ class KnowledgeIndexer
      */
     public function similarChunks(string $query, int $topK = 5): array
     {
-        $queryEmbedding = Embeddings::for([$query])->generate()->embeddings[0];
+        $queryEmbedding = Embeddings::for([$query])->cache()->generate()->embeddings[0];
         $literal = '['.implode(',', $queryEmbedding).']';
 
         return KnowledgeChunk::query()
